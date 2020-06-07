@@ -9,17 +9,29 @@ import java.util.Map;
 
 public class Application {
 
+    //мапа всех нейронов
     private final Map<Long, Neuron> allNeurons = new HashMap<>();
+    //лист нейронов, кроме входных
     private final List<Neuron> neurons = new ArrayList<>();
+    //лист входных нейронов
+    private final List<InputNeuron> inputNeurons = new ArrayList<>();
+    //лист выходных нейронов
+    private final List<OutputNeuron> outputNeurons = new ArrayList<>();
+    //лист сортированных нейронов, для вычислений
     private final List<Neuron> neuronSequence = new ArrayList<>();
 
     public void addNeuron(Neuron neuron) {
         allNeurons.put(neuron.getId(), neuron);
-        if (!(neuron instanceof InputNeuron)) {
+        if (neuron instanceof InputNeuron) {
+            inputNeurons.add((InputNeuron) neuron);
+        } else if (neuron instanceof OutputNeuron) {
+            outputNeurons.add((OutputNeuron) neuron);
+            neuronSequence.add(neuron);
+        } else {
             neurons.add(neuron);
             neuronSequence.add(neuron);
-            sorted();
         }
+        sorted();
     }
 
     public void sorted() {
@@ -43,7 +55,6 @@ public class Application {
             if (checkInputNeuron(neuron, id)) {
                 return true;
             }
-            ;
         }
         return false;
     }
@@ -52,11 +63,9 @@ public class Application {
         neuronSequence.forEach(neuron -> neuron.calculate(allNeurons));
     }
 
-    public void train(int epox, double output) {
-        calculate();
+    public void train(int epox, List<double[]> inputs, List<double[]> output) {
 
-        double err = Math.abs(output - neuronSequence.get(neuronSequence.size() - 1).getAxon());
-
+        double err = calcError(inputs, output);
         for (int i = 0; i < epox; i++) {
             long neuronNumber = Math.round((neurons.size() - 1) * Math.random());
             Neuron neuron = neurons.get((int) neuronNumber);
@@ -65,17 +74,32 @@ public class Application {
             Double dendriteCurrentValue = dendrites.get((int) dendriteNumber);
             double dendriteNextValue = Math.random();
             dendrites.set((int) dendriteNumber, dendriteNextValue);
-            calculate();
-            double currentErr = Math.abs(output - neuronSequence.get(neuronSequence.size() - 1).getAxon());
-            if (currentErr < err) {
-                err = currentErr;
+            double currentError = calcError(inputs, output);
+            if (currentError < err) {
+                err = currentError;
                 System.out.println("Neuron = " + neuron.getId() + " dendriteNumber = " + dendriteNumber +
                         " from - " + dendriteCurrentValue + " to - " + dendriteNextValue +
-                        ". err = " + currentErr + ", value = " + neuronSequence.get(neuronSequence.size() - 1).getAxon());
+                        ". err = " + currentError + ", value = " + neuronSequence.get(neuronSequence.size() - 1).getAxon());
             } else {
                 dendrites.set((int) dendriteNumber, dendriteCurrentValue);
             }
         }
+    }
+
+    private double calcError(List<double[]> inputs, List<double[]> output) {
+        double err = 0;
+        for (int j = 0; j < inputs.size(); j++) {
+            double[] inputValues = inputs.get(j);
+            double[] outputValues = output.get(j);
+            for (int i = 0; i < inputNeurons.size(); i++) {
+                inputNeurons.get(i).setValue(inputValues[i]);
+            }
+            calculate();
+            for (int i = 0; i < outputNeurons.size(); i++) {
+                err += Math.abs(outputNeurons.get(i).getValue() - outputValues[i]);
+            }
+        }
+        return err;
     }
 
     public static void main(String[] args) {
@@ -86,7 +110,7 @@ public class Application {
         application.addNeuron(inputNeuron1);
 
         InputNeuron inputNeuron2 = new InputNeuron();
-        inputNeuron2.setValue(2);
+        inputNeuron2.setValue(1);
         application.addNeuron(inputNeuron2);
 
         Neuron neuron1 = new Neuron();
@@ -116,8 +140,22 @@ public class Application {
         application.addNeuron(outputNeuron);
 
 
-        application.train(10000, 0.0056448);
+        application.train(10000,
+                List.of(new double[]{1, 1}, new double[]{2, 2}, new double[]{3, 3}),
+                List.of(new double[]{2}, new double[]{4}, new double[]{6}));
 
+        inputNeuron1.setValue(1);
+        inputNeuron2.setValue(1);
+        application.calculate();
+        System.out.println(outputNeuron.getAxon());
+
+        inputNeuron1.setValue(2);
+        inputNeuron2.setValue(2);
+        application.calculate();
+        System.out.println(outputNeuron.getAxon());
+
+        inputNeuron1.setValue(3);
+        inputNeuron2.setValue(3);
         application.calculate();
         System.out.println(outputNeuron.getAxon());
     }
