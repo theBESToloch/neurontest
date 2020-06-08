@@ -17,6 +17,7 @@ public class Neuron {
     public Neuron() {
         this.inputNeurons = new ArrayList<>();
         this.dendrites = new ArrayList<>();
+        dendrites.add(Math.random());       //нулевой дендрит - смещение
         this.id = counter.addAndGet(1);
     }
 
@@ -50,11 +51,11 @@ public class Neuron {
     }
 
     public void calculate(Map<Long, Neuron> neurons) {
-        double output = 0;
+        double output = dendrites.get(0);
         for (int i = 0; i < inputNeurons.size(); i++) {
-            output += neurons.get(inputNeurons.get(i)).getAxon() * dendrites.get(i);
+            output += neurons.get(inputNeurons.get(i)).getAxon() * dendrites.get(i + 1);
         }
-        axon = output;
+        axon = 1 / (1 + Math.exp(-output));
     }
 
 }

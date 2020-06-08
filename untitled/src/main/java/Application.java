@@ -26,15 +26,16 @@ public class Application {
             inputNeurons.add((InputNeuron) neuron);
         } else if (neuron instanceof OutputNeuron) {
             outputNeurons.add((OutputNeuron) neuron);
+            neurons.add(neuron);
             neuronSequence.add(neuron);
         } else {
             neurons.add(neuron);
             neuronSequence.add(neuron);
         }
-        sorted();
+        sort();
     }
 
-    public void sorted() {
+    public void sort() {
         neuronSequence.sort((neuron1, neuron2) -> {
             if (checkInputNeuron(neuron1, neuron2.getId())) {
                 return 1;
@@ -71,15 +72,16 @@ public class Application {
             Neuron neuron = neurons.get((int) neuronNumber);
             List<Double> dendrites = neuron.getDendrites();
             long dendriteNumber = Math.round((dendrites.size() - 1) * Math.random());
+
             Double dendriteCurrentValue = dendrites.get((int) dendriteNumber);
-            double dendriteNextValue = Math.random();
+            double dendriteNextValue = dendriteCurrentValue + Math.pow(Math.random() - 0.5, 3);
             dendrites.set((int) dendriteNumber, dendriteNextValue);
             double currentError = calcError(inputs, output);
             if (currentError < err) {
                 err = currentError;
                 System.out.println("Neuron = " + neuron.getId() + " dendriteNumber = " + dendriteNumber +
                         " from - " + dendriteCurrentValue + " to - " + dendriteNextValue +
-                        ". err = " + currentError + ", value = " + neuronSequence.get(neuronSequence.size() - 1).getAxon());
+                        ". err = " + currentError);
             } else {
                 dendrites.set((int) dendriteNumber, dendriteCurrentValue);
             }
@@ -106,11 +108,9 @@ public class Application {
         Application application = new Application();
 
         InputNeuron inputNeuron1 = new InputNeuron();
-        inputNeuron1.setValue(1);
         application.addNeuron(inputNeuron1);
 
         InputNeuron inputNeuron2 = new InputNeuron();
-        inputNeuron2.setValue(1);
         application.addNeuron(inputNeuron2);
 
         Neuron neuron1 = new Neuron();
@@ -118,45 +118,56 @@ public class Application {
         application.addNeuron(neuron1);
 
         Neuron neuron2 = new Neuron();
-        neuron2.addInputNeurons(List.of(inputNeuron1, inputNeuron2, neuron1));
+        neuron2.addInputNeurons(List.of(inputNeuron1, inputNeuron2));
         application.addNeuron(neuron2);
 
-        Neuron neuron3 = new Neuron();
-        neuron3.addInputNeurons(List.of(inputNeuron1, inputNeuron2, neuron1, neuron2));
-        application.addNeuron(neuron3);
 
-        Neuron neuron4 = new Neuron();
-        neuron4.addInputNeurons(List.of(neuron1, neuron2, neuron3));
-        application.addNeuron(neuron4);
+        OutputNeuron outputNeuron1 = new OutputNeuron();
+        outputNeuron1.addInputNeurons(List.of(neuron1, neuron2));
+        application.addNeuron(outputNeuron1);
 
-        Neuron neuron5 = new Neuron();
-        neuron5.addInputNeurons(List.of(neuron1));
-        application.addNeuron(neuron5);
+        OutputNeuron outputNeuron2 = new OutputNeuron();
+        outputNeuron2.addInputNeurons(List.of(neuron1, neuron2));
+        application.addNeuron(outputNeuron2);
 
-        neuron3.addInputNeuron(neuron5);
+        OutputNeuron outputNeuron3 = new OutputNeuron();
+        outputNeuron3.addInputNeurons(List.of(neuron1, neuron2));
+        application.addNeuron(outputNeuron3);
 
-        OutputNeuron outputNeuron = new OutputNeuron();
-        outputNeuron.addInputNeurons(List.of(neuron2, neuron3, neuron4, neuron5));
-        application.addNeuron(outputNeuron);
+        application.train(1000000,
+                List.of(new double[]{0, 0}, new double[]{0, 1}, new double[]{1, 0}),
+                List.of(new double[]{0, 0, 1}, new double[]{0, 1, 0}, new double[]{1, 0, 0})
+        );
 
+        inputNeuron1.setValue(0);
+        inputNeuron2.setValue(0);
+        application.calculate();
+        System.out.println(outputNeuron1.getAxon());
+        System.out.println(outputNeuron2.getAxon());
+        System.out.println(outputNeuron3.getAxon());
+        System.out.println();
 
-        application.train(10000,
-                List.of(new double[]{1, 1}, new double[]{2, 2}, new double[]{3, 3}),
-                List.of(new double[]{2}, new double[]{4}, new double[]{6}));
+        inputNeuron1.setValue(0);
+        inputNeuron2.setValue(1);
+        application.calculate();
+        System.out.println(outputNeuron1.getAxon());
+        System.out.println(outputNeuron2.getAxon());
+        System.out.println(outputNeuron3.getAxon());
+        System.out.println();
+
+        inputNeuron1.setValue(1);
+        inputNeuron2.setValue(0);
+        application.calculate();
+        System.out.println(outputNeuron1.getAxon());
+        System.out.println(outputNeuron2.getAxon());
+        System.out.println(outputNeuron3.getAxon());
+        System.out.println();
 
         inputNeuron1.setValue(1);
         inputNeuron2.setValue(1);
         application.calculate();
-        System.out.println(outputNeuron.getAxon());
-
-        inputNeuron1.setValue(2);
-        inputNeuron2.setValue(2);
-        application.calculate();
-        System.out.println(outputNeuron.getAxon());
-
-        inputNeuron1.setValue(3);
-        inputNeuron2.setValue(3);
-        application.calculate();
-        System.out.println(outputNeuron.getAxon());
+        System.out.println(outputNeuron1.getAxon());
+        System.out.println(outputNeuron2.getAxon());
+        System.out.println(outputNeuron3.getAxon());
     }
 }
