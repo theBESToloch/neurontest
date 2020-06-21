@@ -9,7 +9,8 @@
 
 <AnchorPane prefHeight="320.0" prefWidth="200.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.test.UIControllers.ManageWindowController">
    <children>
-      <Button fx:id="addToProgressBax" layoutX="74.0" layoutY="26.0" mnemonicParsing="false" onMouseClicked="#add" text="Добаить" />
-      <Button fx:id="removeFromProgressBax" layoutX="74.0" layoutY="68.0" mnemonicParsing="false" onMouseClicked="#remove" prefHeight="25.0" prefWidth="63.0" text="убрать" textAlignment="CENTER" />
+      <Button fx:id="addToProgressBax" layoutX="69.0" layoutY="83.0" mnemonicParsing="false" onMouseClicked="#add" text="Добаить" />
+      <Button fx:id="removeFromProgressBax" layoutX="69.0" layoutY="266.0" mnemonicParsing="false" onMouseClicked="#remove" prefHeight="25.0" prefWidth="63.0" text="убрать" textAlignment="CENTER" />
+      <ChoiceBox fx:id="choiceBox" layoutX="25.0" layoutY="27.0" prefWidth="150.0" />
    </children>
 </AnchorPane>

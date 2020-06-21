@@ -1,5 +1,7 @@
 package com.test.UIControllers;
 
+import com.test.NeuronFactory;
+import com.test.template.Neuron;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ScrollPane;
@@ -41,12 +43,15 @@ public class CanvasWindowController {
         System.out.println("x: " + x1 + ", y: " + y1);
 
         if (first.isEmpty() && isAdd) {
-            NeuronGraph addedNeuron = new NeuronGraph(x1, y1, RADIUS);
+            NeuronGraph addedNeuron = new NeuronGraph(x1, y1, RADIUS, ManageWindowController.color);
+            Neuron neuron = NeuronFactory.createNeuron(ManageWindowController.neuronTypes);
+            addedNeuron.setNeuron(neuron);
             addNeuronGraph(addedNeuron);
         } else {
             if (!isAdd && first.isPresent()) {
                 NeuronGraph removedNeuron = first.get();
                 removeNeuronGraph(removedNeuron);
+                NeuronFactory.removeNeuron(removedNeuron.getNeuron());
             }
         }
     }
@@ -54,7 +59,6 @@ public class CanvasWindowController {
     private void addNeuronGraph(NeuronGraph neuronGraph) {
         neuronGraphList.add(neuronGraph);
         updateNeuronsGraph();
-
     }
 
     private void removeNeuronGraph(NeuronGraph neuronGraph) {
@@ -67,11 +71,11 @@ public class CanvasWindowController {
 
     private void updateNeuronsGraph() {
         GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
-        graphicsContext2D.setStroke(Color.BLACK);
 
         for (NeuronGraph neuronGraph : neuronGraphList) {
+            graphicsContext2D.setFill(neuronGraph.getColor());
             double radius = neuronGraph.getRadius();
-            graphicsContext2D.strokeOval(neuronGraph.getX() - radius, neuronGraph.getY() - radius, radius * 2, radius * 2);
+            graphicsContext2D.fillOval(neuronGraph.getX() - radius, neuronGraph.getY() - radius, radius * 2, radius * 2);
         }
         graphicsContext2D.stroke();
     }
@@ -81,11 +85,14 @@ class NeuronGraph {
     private final double x;
     private final double y;
     private final double radius;
+    private final Color color;
+    private Neuron neuron;
 
-    public NeuronGraph(double x, double y, double radius) {
+    public NeuronGraph(double x, double y, double radius, Color color) {
         this.x = x;
         this.y = y;
         this.radius = radius;
+        this.color = color;
     }
 
     public boolean isOccupied(double x, double y) {
@@ -102,5 +109,18 @@ class NeuronGraph {
 
     public double getRadius() {
         return radius;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public Neuron getNeuron() {
+        return neuron;
+    }
+
+    public NeuronGraph setNeuron(Neuron neuron) {
+        this.neuron = neuron;
+        return this;
     }
 }

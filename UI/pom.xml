@@ -22,6 +22,14 @@
             <artifactId>javafx-fxml</artifactId>
             <version>14</version>
         </dependency>
+        <dependency>
+            <groupId>com.test</groupId>
+            <artifactId>data</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.test</groupId>
+            <artifactId>untitled</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

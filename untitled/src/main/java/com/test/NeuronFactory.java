@@ -1,3 +1,6 @@
+package com.test;
+
+import com.test.enums.NeuronTypes;
 import com.test.template.InputNeuron;
 import com.test.template.Neuron;
 import com.test.template.OutputNeuron;
@@ -7,20 +10,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Application {
-
+public class NeuronFactory {
     //мапа всех нейронов
-    private final Map<Long, Neuron> allNeurons = new HashMap<>();
+    private static final Map<Long, Neuron> allNeurons = new HashMap<>();
     //лист нейронов, кроме входных
-    private final List<Neuron> neurons = new ArrayList<>();
+    private static final List<Neuron> neurons = new ArrayList<>();
     //лист входных нейронов
-    private final List<InputNeuron> inputNeurons = new ArrayList<>();
+    private static final List<InputNeuron> inputNeurons = new ArrayList<>();
     //лист выходных нейронов
-    private final List<OutputNeuron> outputNeurons = new ArrayList<>();
+    private static final List<OutputNeuron> outputNeurons = new ArrayList<>();
     //лист сортированных нейронов, для вычислений
-    private final List<Neuron> neuronSequence = new ArrayList<>();
+    private static final List<Neuron> neuronSequence = new ArrayList<>();
 
-    public void addNeuron(Neuron neuron) {
+    private static void addNeuron(Neuron neuron) {
         allNeurons.put(neuron.getId(), neuron);
         if (neuron instanceof InputNeuron) {
             inputNeurons.add((InputNeuron) neuron);
@@ -35,7 +37,22 @@ public class Application {
         sort();
     }
 
-    public void sort() {
+    public static void removeNeuron(Neuron neuron) {
+        allNeurons.remove(neuron.getId());
+        if (neuron instanceof InputNeuron) {
+            inputNeurons.remove(neuron);
+        } else if (neuron instanceof OutputNeuron) {
+            outputNeurons.remove(neuron);
+            neurons.remove(neuron);
+            neuronSequence.remove(neuron);
+        } else {
+            neurons.remove(neuron);
+            neuronSequence.remove(neuron);
+        }
+        sort();
+    }
+
+    private static void sort() {
         neuronSequence.sort((neuron1, neuron2) -> {
             if (checkInputNeuron(neuron1, neuron2.getId())) {
                 return 1;
@@ -47,7 +64,7 @@ public class Application {
         });
     }
 
-    private boolean checkInputNeuron(Neuron neuron1, long id) {
+    private static boolean checkInputNeuron(Neuron neuron1, long id) {
         if (neuron1.getInputNeurons().contains(id)) {
             return true;
         }
@@ -60,11 +77,11 @@ public class Application {
         return false;
     }
 
-    public void calculate() {
+    public static void calculate() {
         neuronSequence.forEach(neuron -> neuron.calculate(allNeurons));
     }
 
-    public void train(int epox, List<double[]> inputs, List<double[]> output) {
+    public static void train(int epox, List<double[]> inputs, List<double[]> output) {
 
         double err = calcError(inputs, output);
         for (int i = 0; i < epox; i++) {
@@ -88,7 +105,7 @@ public class Application {
         }
     }
 
-    private double calcError(List<double[]> inputs, List<double[]> output) {
+    private static double calcError(List<double[]> inputs, List<double[]> output) {
         double err = 0;
         for (int j = 0; j < inputs.size(); j++) {
             double[] inputValues = inputs.get(j);
@@ -104,70 +121,14 @@ public class Application {
         return err;
     }
 
-    public static void main(String[] args) {
-        Application application = new Application();
-
-        InputNeuron inputNeuron1 = new InputNeuron();
-        application.addNeuron(inputNeuron1);
-
-        InputNeuron inputNeuron2 = new InputNeuron();
-        application.addNeuron(inputNeuron2);
-
-        Neuron neuron1 = new Neuron();
-        neuron1.addInputNeurons(List.of(inputNeuron1, inputNeuron2));
-        application.addNeuron(neuron1);
-
-        Neuron neuron2 = new Neuron();
-        neuron2.addInputNeurons(List.of(inputNeuron1, inputNeuron2));
-        application.addNeuron(neuron2);
-
-
-        OutputNeuron outputNeuron1 = new OutputNeuron();
-        outputNeuron1.addInputNeurons(List.of(neuron1, neuron2));
-        application.addNeuron(outputNeuron1);
-
-        OutputNeuron outputNeuron2 = new OutputNeuron();
-        outputNeuron2.addInputNeurons(List.of(neuron1, neuron2));
-        application.addNeuron(outputNeuron2);
-
-        OutputNeuron outputNeuron3 = new OutputNeuron();
-        outputNeuron3.addInputNeurons(List.of(neuron1, neuron2));
-        application.addNeuron(outputNeuron3);
-
-        application.train(1000000,
-                List.of(new double[]{0, 0}, new double[]{0, 1}, new double[]{1, 0}),
-                List.of(new double[]{0, 0, 1}, new double[]{0, 1, 0}, new double[]{1, 0, 0})
-        );
-
-        inputNeuron1.setValue(0);
-        inputNeuron2.setValue(0);
-        application.calculate();
-        System.out.println(outputNeuron1.getAxon());
-        System.out.println(outputNeuron2.getAxon());
-        System.out.println(outputNeuron3.getAxon());
-        System.out.println();
-
-        inputNeuron1.setValue(0);
-        inputNeuron2.setValue(1);
-        application.calculate();
-        System.out.println(outputNeuron1.getAxon());
-        System.out.println(outputNeuron2.getAxon());
-        System.out.println(outputNeuron3.getAxon());
-        System.out.println();
-
-        inputNeuron1.setValue(1);
-        inputNeuron2.setValue(0);
-        application.calculate();
-        System.out.println(outputNeuron1.getAxon());
-        System.out.println(outputNeuron2.getAxon());
-        System.out.println(outputNeuron3.getAxon());
-        System.out.println();
-
-        inputNeuron1.setValue(1);
-        inputNeuron2.setValue(1);
-        application.calculate();
-        System.out.println(outputNeuron1.getAxon());
-        System.out.println(outputNeuron2.getAxon());
-        System.out.println(outputNeuron3.getAxon());
+    public static Neuron createNeuron(NeuronTypes neuronTypes) {
+        Neuron neuron = null;
+        switch (neuronTypes) {
+            case INPUT -> neuron = new InputNeuron();
+            case HIDDEN -> neuron = new Neuron();
+            case OUTPUT -> neuron = new OutputNeuron();
+        }
+        addNeuron(neuron);
+        return neuron;
     }
 }
