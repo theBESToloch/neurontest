@@ -1,7 +1,9 @@
 package com.test.UIControllers;
 
+import com.test.NeuronFactory;
 import com.test.enums.NeuronTypes;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -9,6 +11,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class ManageWindowController implements Initializable {
@@ -20,6 +24,7 @@ public class ManageWindowController implements Initializable {
     public Button removeFromProgressBax;
     public Button addToProgressBax;
     public ChoiceBox<String> choiceBox;
+    public Button train;
 
     public void add(MouseEvent mouseEvent) {
         isAdd = true;
@@ -27,6 +32,16 @@ public class ManageWindowController implements Initializable {
 
     public void remove(MouseEvent mouseEvent) {
         isAdd = false;
+    }
+
+    public void onButtonTrainClick(ActionEvent actionEvent) {
+        NeuronFactory.train(1000, List.of(new double[]{0, 0}, new double[]{0, 1}, new double[]{1, 0}, new double[]{1, 1}),
+                List.of(new double[]{1, 0}, new double[]{1, 0}, new double[]{0, 1}, new double[]{0, 1}));
+
+        System.out.println(Arrays.toString(NeuronFactory.calculate(new double[]{0, 0})));
+        System.out.println(Arrays.toString(NeuronFactory.calculate(new double[]{0, 1})));
+        System.out.println(Arrays.toString(NeuronFactory.calculate(new double[]{1, 0})));
+        System.out.println(Arrays.toString(NeuronFactory.calculate(new double[]{1, 1})));
     }
 
     @Override

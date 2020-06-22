@@ -79,6 +79,42 @@ public class CanvasWindowController {
         }
         graphicsContext2D.stroke();
     }
+
+
+    private NeuronGraph pressedNeuron = null;
+
+    public void onMousePressed(MouseEvent mouseEvent) {
+        final Optional<NeuronGraph> neuronPressed = neuronGraphList
+                .stream()
+                .filter(neuronGraph -> neuronGraph.isOccupied(mouseEvent.getX(), mouseEvent.getY()))
+                .findFirst();
+
+        neuronPressed.ifPresent(neuronGraph -> pressedNeuron = neuronGraph);
+    }
+
+    public void onMouseReleased(MouseEvent mouseEvent) {
+        final Optional<NeuronGraph> neuronReleased = neuronGraphList
+                .stream()
+                .filter(neuronGraph -> neuronGraph.isOccupied(mouseEvent.getX(), mouseEvent.getY()))
+                .findFirst();
+        neuronReleased.ifPresent(neuronGraph -> {
+            if (pressedNeuron != null) {
+                Neuron neuronFrom = pressedNeuron.getNeuron();
+                Neuron neuronTo = neuronGraph.getNeuron();
+                neuronTo.addInputNeurons(List.of(neuronFrom));
+                addSynapse(pressedNeuron, neuronGraph);
+            }
+        });
+
+    }
+
+    private void addSynapse(NeuronGraph from, NeuronGraph to) {
+        GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
+        graphicsContext2D.moveTo(from.getX(), from.getY());
+        graphicsContext2D.lineTo(to.getX(), to.getY());
+        graphicsContext2D.stroke();
+    }
+
 }
 
 class NeuronGraph {

@@ -77,6 +77,18 @@ public class NeuronFactory {
         return false;
     }
 
+    public static double[] calculate(double[] inputs) {
+        for (int i = 0; i < inputNeurons.size(); i++) {
+            inputNeurons.get(i).setValue(inputs[i]);
+        }
+        neuronSequence.forEach(neuron -> neuron.calculate(allNeurons));
+        double[] outputs = new double[outputNeurons.size()];
+        for (int i = 0; i < outputNeurons.size(); i++) {
+            outputs[i] = outputNeurons.get(i).getValue();
+        }
+        return outputs;
+    }
+
     public static void calculate() {
         neuronSequence.forEach(neuron -> neuron.calculate(allNeurons));
     }
