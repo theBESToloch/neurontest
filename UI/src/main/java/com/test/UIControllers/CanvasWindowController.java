@@ -1,5 +1,6 @@
 package com.test.UIControllers;
 
+import com.test.App;
 import com.test.NeuronFactory;
 import com.test.template.Neuron;
 import javafx.scene.canvas.Canvas;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.test.UIControllers.ManageWindowController.isAdd;
+import static com.test.UIControllers.ManageWindowController.actionType;
 
 public class CanvasWindowController {
 
@@ -20,10 +21,11 @@ public class CanvasWindowController {
 
     public ScrollPane scrollPane;
 
+    public static NeuronGraph viewNeuron;
+
     private static final List<NeuronGraph> neuronGraphList = new ArrayList<>();
 
     private static final double RADIUS = 10;
-
 
     public void onMouseClick(MouseEvent mouseEvent) {
         double layoutX = canvas.getLayoutX();
@@ -42,44 +44,58 @@ public class CanvasWindowController {
 
         System.out.println("x: " + x1 + ", y: " + y1);
 
-        if (first.isEmpty() && isAdd) {
-            NeuronGraph addedNeuron = new NeuronGraph(x1, y1, RADIUS, ManageWindowController.color);
-            Neuron neuron = NeuronFactory.createNeuron(ManageWindowController.neuronTypes);
-            addedNeuron.setNeuron(neuron);
-            addNeuronGraph(addedNeuron);
-        } else {
-            if (!isAdd && first.isPresent()) {
-                NeuronGraph removedNeuron = first.get();
-                removeNeuronGraph(removedNeuron);
-                NeuronFactory.removeNeuron(removedNeuron.getNeuron());
+        if (first.isEmpty()) {
+            switch (actionType) {
+                case ADD -> {
+                    NeuronGraph addedNeuron = new NeuronGraph(x1, y1, RADIUS, ManageWindowController.color);
+                    Neuron neuron = NeuronFactory.createNeuron(ManageWindowController.neuronTypes);
+                    addedNeuron.setNeuron(neuron);
+                    addNeuronGraph(addedNeuron);
+                }
+                case REMOVE, VIEW -> {
+                }
+            }
+        }
+        if (first.isPresent()) {
+            switch (actionType) {
+                case ADD -> {
+                }
+                case REMOVE -> {
+                    NeuronGraph removedNeuron = first.get();
+                    removeNeuronGraph(removedNeuron);
+                }
+                case VIEW -> {
+                    viewNeuron = first.get();
+                    App.propertiesStage.show();
+                }
             }
         }
     }
 
     private void addNeuronGraph(NeuronGraph neuronGraph) {
         neuronGraphList.add(neuronGraph);
+
         updateNeuronsGraph();
     }
 
     private void removeNeuronGraph(NeuronGraph neuronGraph) {
-        GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
-        graphicsContext2D.clearRect(canvas.getLayoutX(), canvas.getLayoutY(), canvas.getHeight(), canvas.getWidth());
+        for (NeuronGraph graph : neuronGraph.getInputConnect()) {
+            graph.removeNeuronGraphsFromOutput(neuronGraph);
+        }
+
+        neuronGraph.getInputConnect().clear();
+
+        for (NeuronGraph graph : neuronGraph.getOutputConnect()) {
+            graph.removeNeuronGraphsFromInput(neuronGraph);
+        }
+        neuronGraph.getOutputConnect().clear();
+
+        NeuronFactory.removeNeuron(neuronGraph.getNeuron());
 
         neuronGraphList.remove(neuronGraph);
+
         updateNeuronsGraph();
     }
-
-    private void updateNeuronsGraph() {
-        GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
-
-        for (NeuronGraph neuronGraph : neuronGraphList) {
-            graphicsContext2D.setFill(neuronGraph.getColor());
-            double radius = neuronGraph.getRadius();
-            graphicsContext2D.fillOval(neuronGraph.getX() - radius, neuronGraph.getY() - radius, radius * 2, radius * 2);
-        }
-        graphicsContext2D.stroke();
-    }
-
 
     private NeuronGraph pressedNeuron = null;
 
@@ -99,20 +115,39 @@ public class CanvasWindowController {
                 .findFirst();
         neuronReleased.ifPresent(neuronGraph -> {
             if (pressedNeuron != null) {
-                Neuron neuronFrom = pressedNeuron.getNeuron();
-                Neuron neuronTo = neuronGraph.getNeuron();
-                neuronTo.addInputNeurons(List.of(neuronFrom));
                 addSynapse(pressedNeuron, neuronGraph);
             }
         });
-
     }
 
     private void addSynapse(NeuronGraph from, NeuronGraph to) {
+        if (from.getNeuron().getId() != to.getNeuron().getId()) {
+            NeuronFactory.bindNeurons(from.getNeuron(), to.getNeuron());
+            from.addOutputNeuronGraph(to);
+            to.addInputNeuronGraph(from);
+            updateNeuronsGraph();
+        }
+    }
+
+    private void updateNeuronsGraph() {
         GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
-        graphicsContext2D.moveTo(from.getX(), from.getY());
-        graphicsContext2D.lineTo(to.getX(), to.getY());
-        graphicsContext2D.stroke();
+        graphicsContext2D.rect(0, 0, canvas.getWidth(), canvas.getHeight());
+        graphicsContext2D.setFill(Color.WHITE);
+        graphicsContext2D.fill();
+
+        System.out.println("" + canvas.getLayoutX() + canvas.getLayoutY() + canvas.getWidth() + canvas.getHeight());
+
+        for (NeuronGraph neuronGraph : neuronGraphList) {
+            graphicsContext2D.setFill(neuronGraph.getColor());
+            double radius = neuronGraph.getRadius();
+            graphicsContext2D.fillOval(neuronGraph.getX() - radius, neuronGraph.getY() - radius, radius * 2, radius * 2);
+        }
+
+        for (NeuronGraph neuronGraph : neuronGraphList) {
+            for (NeuronGraph graph : neuronGraph.getInputConnect()) {
+                graphicsContext2D.strokeLine(graph.getX(), graph.getY(), neuronGraph.getX(), neuronGraph.getY());
+            }
+        }
     }
 
 }
@@ -122,6 +157,8 @@ class NeuronGraph {
     private final double y;
     private final double radius;
     private final Color color;
+    private final List<NeuronGraph> outputConnect;
+    private final List<NeuronGraph> inputConnect;
     private Neuron neuron;
 
     public NeuronGraph(double x, double y, double radius, Color color) {
@@ -129,6 +166,8 @@ class NeuronGraph {
         this.y = y;
         this.radius = radius;
         this.color = color;
+        this.outputConnect = new ArrayList<>();
+        this.inputConnect = new ArrayList<>();
     }
 
     public boolean isOccupied(double x, double y) {
@@ -158,5 +197,29 @@ class NeuronGraph {
     public NeuronGraph setNeuron(Neuron neuron) {
         this.neuron = neuron;
         return this;
+    }
+
+    public void addOutputNeuronGraph(NeuronGraph neuronGraph) {
+        this.outputConnect.add(neuronGraph);
+    }
+
+    public void removeNeuronGraphsFromOutput(NeuronGraph neuronGraph) {
+        outputConnect.remove(neuronGraph);
+    }
+
+    public List<NeuronGraph> getOutputConnect() {
+        return outputConnect;
+    }
+
+    public void addInputNeuronGraph(NeuronGraph neuronGraph) {
+        this.inputConnect.add(neuronGraph);
+    }
+
+    public void removeNeuronGraphsFromInput(NeuronGraph neuronGraph) {
+        inputConnect.remove(neuronGraph);
+    }
+
+    public List<NeuronGraph> getInputConnect() {
+        return inputConnect;
     }
 }

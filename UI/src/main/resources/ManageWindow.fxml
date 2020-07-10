@@ -9,9 +9,10 @@
 
 <AnchorPane prefHeight="320.0" prefWidth="200.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.test.UIControllers.ManageWindowController">
     <children>
-        <Button fx:id="addToProgressBax" layoutX="69.0" layoutY="83.0" mnemonicParsing="false" onMouseClicked="#add" text="Добаить" />
-        <Button fx:id="removeFromProgressBax" layoutX="69.0" layoutY="123.0" mnemonicParsing="false" onMouseClicked="#remove" prefHeight="25.0" prefWidth="63.0" text="убрать" textAlignment="CENTER" />
+        <Button fx:id="addNeuron" layoutX="60.0" layoutY="79.0" mnemonicParsing="false" onMouseClicked="#add" prefHeight="1.0" prefWidth="82.0" text="Добаить" />
+        <Button fx:id="removeNeuron" layoutX="59.0" layoutY="144.0" mnemonicParsing="false" onMouseClicked="#remove" prefHeight="0.0" prefWidth="82.0" text="убрать" textAlignment="CENTER" />
         <ChoiceBox fx:id="choiceBox" layoutX="25.0" layoutY="27.0" prefWidth="150.0" />
       <Button fx:id="train" layoutX="57.0" layoutY="237.0" mnemonicParsing="false" onAction="#onButtonTrainClick" text="Тренировать" />
+      <Button fx:id="viewNeuron" layoutX="59.0" layoutY="111.0" mnemonicParsing="false" onMouseClicked="#view" prefHeight="0.0" prefWidth="82.0" text="Посмотреть" />
     </children>
 </AnchorPane>

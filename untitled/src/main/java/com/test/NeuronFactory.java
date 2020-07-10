@@ -13,12 +13,15 @@ import java.util.Map;
 public class NeuronFactory {
     //мапа всех нейронов
     private static final Map<Long, Neuron> allNeurons = new HashMap<>();
+
     //лист нейронов, кроме входных
     private static final List<Neuron> neurons = new ArrayList<>();
+
     //лист входных нейронов
     private static final List<InputNeuron> inputNeurons = new ArrayList<>();
     //лист выходных нейронов
     private static final List<OutputNeuron> outputNeurons = new ArrayList<>();
+
     //лист сортированных нейронов, для вычислений
     private static final List<Neuron> neuronSequence = new ArrayList<>();
 
@@ -49,28 +52,30 @@ public class NeuronFactory {
             neurons.remove(neuron);
             neuronSequence.remove(neuron);
         }
+        neurons.forEach(outputNeuron -> outputNeuron.getInputNeurons().remove(neuron.getId()));
+
         sort();
     }
 
     private static void sort() {
         neuronSequence.sort((neuron1, neuron2) -> {
-            if (checkInputNeuron(neuron1, neuron2.getId())) {
+            if (checkInputNeuron(neuron1, neuron2)) {
                 return 1;
             }
-            if (checkInputNeuron(neuron2, neuron1.getId())) {
+            if (checkInputNeuron(neuron2, neuron1)) {
                 return -1;
             }
             return 0;
         });
     }
 
-    private static boolean checkInputNeuron(Neuron neuron1, long id) {
-        if (neuron1.getInputNeurons().contains(id)) {
+    private static boolean checkInputNeuron(Neuron neuron1, Neuron neuron2) {
+        if (neuron1.getInputNeurons().contains(neuron2.getId())) {
             return true;
         }
         for (Long inputNeuron : neuron1.getInputNeurons()) {
             Neuron neuron = allNeurons.get(inputNeuron);
-            if (checkInputNeuron(neuron, id)) {
+            if (checkInputNeuron(neuron, neuron2)) {
                 return true;
             }
         }
@@ -143,4 +148,9 @@ public class NeuronFactory {
         addNeuron(neuron);
         return neuron;
     }
+
+    public static void bindNeurons(Neuron outputNeuron, Neuron inputNeuron){
+        inputNeuron.addInputNeurons(List.of(outputNeuron));
+    };
+
 }
