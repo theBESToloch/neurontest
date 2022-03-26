@@ -2,10 +2,9 @@
 
 <?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.control.ScrollPane?>
-<ScrollPane fx:id="scrollPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.test.UIControllers.CanvasWindowController">
+
+<ScrollPane fx:id="scrollPane" fitToHeight="true" fitToWidth="true" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.test.UIControllers.CanvasWindowController">
     <content>
-        <Canvas fx:id="canvas" height="98.0" onMouseClicked="#onMouseClick" onMousePressed="#onMousePressed"
-                onMouseReleased="#onMouseReleased" width="98.0"/>
+        <Canvas fx:id="canvas" onMouseClicked="#onMouseClick" onMousePressed="#onMousePressed" onMouseReleased="#onMouseReleased" />
     </content>
 </ScrollPane>

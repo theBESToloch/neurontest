@@ -9,8 +9,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Predicate;
 
 public class NeuronFactory {
+
+    private static final ExecutorService executorService = Executors.newWorkStealingPool();
+    public static double err;
+
     //мапа всех нейронов
     private static final Map<Long, Neuron> allNeurons = new HashMap<>();
 
@@ -99,8 +106,7 @@ public class NeuronFactory {
     }
 
     public static void train(int epox, List<double[]> inputs, List<double[]> output) {
-
-        double err = calcError(inputs, output);
+        err = calcError(inputs, output);
         for (int i = 0; i < epox; i++) {
             long neuronNumber = Math.round((neurons.size() - 1) * Math.random());
             Neuron neuron = neurons.get((int) neuronNumber);
@@ -113,13 +119,23 @@ public class NeuronFactory {
             double currentError = calcError(inputs, output);
             if (currentError < err) {
                 err = currentError;
-                System.out.println("Neuron = " + neuron.getId() + " dendriteNumber = " + dendriteNumber +
-                        " from - " + dendriteCurrentValue + " to - " + dendriteNextValue +
-                        ". err = " + currentError);
             } else {
                 dendrites.set((int) dendriteNumber, dendriteCurrentValue);
             }
         }
+    }
+
+    public static void trainWithCondition(Predicate<Double> isEnd, List<double[]> inputs, List<double[]> output) {
+        executorService.submit(() -> {
+            while (!isEnd.test(err)) {
+                try {
+                    train(1000, inputs, output);
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 
     private static double calcError(List<double[]> inputs, List<double[]> output) {
@@ -149,8 +165,10 @@ public class NeuronFactory {
         return neuron;
     }
 
-    public static void bindNeurons(Neuron outputNeuron, Neuron inputNeuron){
+    public static void bindNeurons(Neuron outputNeuron, Neuron inputNeuron) {
         inputNeuron.addInputNeurons(List.of(outputNeuron));
-    };
+    }
+
+    ;
 
 }
