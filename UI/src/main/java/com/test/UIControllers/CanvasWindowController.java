@@ -8,6 +8,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Optional;
 
 import static com.test.UIControllers.ManageWindowController.actionType;
 
+@Slf4j
 public class CanvasWindowController {
 
     public Canvas canvas;
@@ -42,7 +44,7 @@ public class CanvasWindowController {
                 .filter(neuronGraph -> neuronGraph.isOccupied(x1, y1))
                 .findFirst();
 
-        System.out.println("x: " + x1 + ", y: " + y1);
+        log.info("x: " + x1 + ", y: " + y1);
 
         if (first.isEmpty()) {
             switch (actionType) {
@@ -66,6 +68,7 @@ public class CanvasWindowController {
                 }
                 case VIEW -> {
                     viewNeuron = first.get();
+                    NeuronPropertiesController.show(viewNeuron);
                     App.propertiesStage.show();
                 }
             }
@@ -134,8 +137,6 @@ public class CanvasWindowController {
         graphicsContext2D.rect(0, 0, canvas.getWidth(), canvas.getHeight());
         graphicsContext2D.setFill(Color.WHITE);
         graphicsContext2D.fill();
-
-        System.out.println("" + canvas.getLayoutX() + canvas.getLayoutY() + canvas.getWidth() + canvas.getHeight());
 
         for (NeuronGraph neuronGraph : neuronGraphList) {
             graphicsContext2D.setFill(neuronGraph.getColor());

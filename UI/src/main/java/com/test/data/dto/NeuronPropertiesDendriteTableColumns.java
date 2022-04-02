@@ -1,6 +1,11 @@
 package com.test.data.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
 public class NeuronPropertiesDendriteTableColumns {
-    String neuron;
-    String weight;
+    long neuron;
+    double weight;
 }

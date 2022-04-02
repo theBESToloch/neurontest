@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.text.*?>
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="400.0" prefWidth="283.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.test.UIControllers.NeuronPropertiesController">
+<AnchorPane prefHeight="400.0" prefWidth="248.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.test.UIControllers.NeuronPropertiesController">
     <children>
         <Label layoutX="23.0" layoutY="143.0" />
-        <Label layoutX="23.0" layoutY="35.0" text="Дендриты" />
-        <TableView fx:id="dendritesTable" layoutX="23.0" layoutY="60.0" prefHeight="80.0" prefWidth="238.0">
+        <Label layoutX="23.0" layoutY="108.0" text="Дендриты" AnchorPane.leftAnchor="23.0" />
+        <TableView fx:id="dendritesTable" layoutX="23.0" layoutY="134.0" prefHeight="80.0" prefWidth="201.0">
             <columns>
-                <TableColumn prefWidth="115.0" text="нейрон" />
-                <TableColumn prefWidth="122.0" text="вес" />
+                <TableColumn fx:id="neuronColumn" prefWidth="57.0" text="нейрон" />
+                <TableColumn fx:id="dendriteColumn" prefWidth="143.0" text="вес" />
             </columns>
         </TableView>
+      <Label layoutX="23.0" layoutY="32.0" text="id" AnchorPane.leftAnchor="23.0" />
+      <TextField fx:id="neuronId" layoutX="23.0" layoutY="55.0" prefHeight="26.0" prefWidth="238.0" AnchorPane.leftAnchor="23.0" AnchorPane.rightAnchor="22.0" />
     </children>
 </AnchorPane>
