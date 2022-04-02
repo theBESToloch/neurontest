@@ -7,11 +7,14 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import org.springframework.stereotype.Controller;
 
 import java.net.URL;
 import java.util.Arrays;
 import java.util.ResourceBundle;
 
+
+@Controller
 public class NeuronPropertiesController implements Initializable {
 
     public TextField neuronId;

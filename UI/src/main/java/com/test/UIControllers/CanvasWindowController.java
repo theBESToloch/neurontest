@@ -1,6 +1,6 @@
 package com.test.UIControllers;
 
-import com.test.App;
+import com.test.FxApp;
 import com.test.NeuronFactory;
 import com.test.template.Neuron;
 import javafx.scene.canvas.Canvas;
@@ -9,6 +9,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Controller;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.Optional;
 import static com.test.UIControllers.ManageWindowController.actionType;
 
 @Slf4j
+@Controller
 public class CanvasWindowController {
 
     public Canvas canvas;
@@ -69,7 +71,7 @@ public class CanvasWindowController {
                 case VIEW -> {
                     viewNeuron = first.get();
                     NeuronPropertiesController.show(viewNeuron);
-                    App.propertiesStage.show();
+                    //FxApp.propertiesStage.show();
                 }
             }
         }

@@ -1,25 +1,27 @@
 package com.test;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.IOException;
+import java.net.URL;
 
-public class App extends Application {
+public class FxApp extends Application {
 
-    public static Stage canvasStage;
-    public static Stage manageStage;
-    public static Stage propertiesStage;
+    private ConfigurableApplicationContext applicationContext;
 
     @Override
-    public void start(Stage canvasStage) throws IOException {
+    public void start(Stage canvasStage) {
 
-        ScrollPane scrollPane = FXMLLoader.load(getClass().getResource("/CanvasWindow.fxml"));
+        ScrollPane scrollPane = load(getClass().getResource("/CanvasWindow.fxml"));
         Scene scene = new Scene(scrollPane, 480, 320);
         canvasStage.setScene(scene);
 
@@ -32,7 +34,7 @@ public class App extends Application {
         Stage manageStage = new Stage();
         manageStage.initOwner(canvasStage);
 
-        AnchorPane manage = FXMLLoader.load(getClass().getResource("/ManageWindow.fxml"));
+        AnchorPane manage = load(getClass().getResource("/ManageWindow.fxml"));
         Scene manageScene = new Scene(manage, 200, 320);
         manageStage.setScene(manageScene);
 
@@ -45,19 +47,32 @@ public class App extends Application {
         Stage propertiesStage = new Stage();
         propertiesStage.initOwner(canvasStage);
 
-        AnchorPane properties = FXMLLoader.load(getClass().getResource("/NeuronProperties.fxml"));
-        Scene propertiesScene = new Scene(properties, 283, 320);
+        AnchorPane properties = load(getClass().getResource("/NeuronProperties.fxml"));
+        Scene propertiesScene = new Scene(properties, 200, 320);
         propertiesStage.setScene(propertiesScene);
-
-        App.canvasStage = canvasStage;
-        App.manageStage = manageStage;
-        App.propertiesStage = propertiesStage;
 
         canvasStage.show();
         manageStage.show();
     }
 
-    public static void main(String[] args) {
-        launch();
+    public <T> T load(URL resource) {
+        FXMLLoader fxmlLoader = new FXMLLoader(resource);
+        fxmlLoader.setControllerFactory((aClass) -> applicationContext.getBean(aClass));
+        try {
+            return fxmlLoader.load();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void init() {
+        applicationContext = new SpringApplicationBuilder(com.test.Application.class).run();
+    }
+
+    @Override
+    public void stop() {
+        applicationContext.close();
+        Platform.exit();
     }
 }

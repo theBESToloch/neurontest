@@ -12,11 +12,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Controller;
 
 import java.net.URL;
 import java.util.*;
 
 @Slf4j
+@Controller
 public class ManageWindowController implements Initializable {
     public static ActionTypes actionType = ActionTypes.ADD;
     public static Color color = Color.BLACK;
