@@ -1,6 +1,6 @@
 package com.test.UIControllers;
 
-import com.test.NeuronFactory;
+import com.test.context.ApplicationContext;
 import com.test.data.enums.ActionTypes;
 import com.test.enums.NeuronTypes;
 import javafx.collections.FXCollections;
@@ -10,7 +10,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 
@@ -20,11 +19,6 @@ import java.util.*;
 @Slf4j
 @Controller
 public class ManageWindowController implements Initializable {
-    public static ActionTypes actionType = ActionTypes.ADD;
-    public static Color color = Color.BLACK;
-    public static NeuronTypes neuronTypes = NeuronTypes.HIDDEN;
-    public static volatile boolean isTrainButton = true;
-
     public ChoiceBox<String> choiceBox;
     public Button addNeuron;
     public Button removeNeuron;
@@ -33,23 +27,29 @@ public class ManageWindowController implements Initializable {
     public Button view;
     public TextField currentError;
 
+    private final ApplicationContext.ManageWindowState state;
+
+    public ManageWindowController(ApplicationContext.ManageWindowState state) {
+        this.state = state;
+    }
+
     public void add(MouseEvent mouseEvent) {
-        actionType = ActionTypes.ADD;
+        state.setActionType(ActionTypes.ADD);
     }
 
     public void remove(MouseEvent mouseEvent) {
-        actionType = ActionTypes.REMOVE;
+        state.setActionType(ActionTypes.REMOVE);
     }
 
     public void onView(ActionEvent actionEvent) {
-        actionType = ActionTypes.VIEW;
+        state.setActionType(ActionTypes.VIEW);
     }
 
     public void test(MouseEvent mouseEvent) {
         currentError.setText("");
         double err = 0;
         for (int i = 0; i < inputVectors.size(); i++) {
-            double[] calculate = NeuronFactory.calculate(inputVectors.get(i));
+            double[] calculate = state.getNeuronFactory().calculate(inputVectors.get(i));
             double[] output = outputVectors.get(i);
             log.info("Выборка номер {}: выходной вектор: {}, рассчитанный вектор: {}",
                     i, Arrays.toString(output), Arrays.toString(calculate));
@@ -61,7 +61,6 @@ public class ManageWindowController implements Initializable {
     }
 
     public static List<double[]> inputVectors = new ArrayList<>();
-
     public static List<double[]> outputVectors = new ArrayList<>();
 
     static {
@@ -96,16 +95,16 @@ public class ManageWindowController implements Initializable {
     }
 
     public synchronized void onButtonTrainClick(ActionEvent actionEvent) {
-        if (isTrainButton) {
-            isTrainButton = false;
+        if (state.isTrainButton()) {
+            state.setTrainButton(false);
             trainButton.setText("Остановить");
             log.info("Тренирую");
-            NeuronFactory.trainWithCondition((err) -> {
+            state.getNeuronFactory().trainWithCondition((err) -> {
                 log.info(String.valueOf(err));
-                return isTrainButton;
+                return state.isTrainButton();
             }, inputVectors, outputVectors);
         } else {
-            isTrainButton = true;
+            state.setTrainButton(true);
             trainButton.setText("Тренировать");
         }
     }
@@ -117,18 +116,9 @@ public class ManageWindowController implements Initializable {
 
         choiceBox.setOnAction(event -> {
             switch (choiceBox.getValue()) {
-                case "входной нейрон" -> {
-                    color = Color.BLUE;
-                    neuronTypes = NeuronTypes.INPUT;
-                }
-                case "нейрон" -> {
-                    color = Color.BLACK;
-                    neuronTypes = NeuronTypes.HIDDEN;
-                }
-                case "выходной нейрон" -> {
-                    color = Color.GRAY;
-                    neuronTypes = NeuronTypes.OUTPUT;
-                }
+                case "входной нейрон" -> state.setNeuronType(NeuronTypes.INPUT);
+                case "нейрон" -> state.setNeuronType(NeuronTypes.HIDDEN);
+                case "выходной нейрон" -> state.setNeuronType(NeuronTypes.OUTPUT);
             }
         });
     }

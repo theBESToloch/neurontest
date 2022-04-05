@@ -48,7 +48,7 @@ public class FxApp extends Application {
         propertiesStage.initOwner(canvasStage);
 
         AnchorPane properties = load(getClass().getResource("/NeuronProperties.fxml"));
-        Scene propertiesScene = new Scene(properties, 200, 320);
+        Scene propertiesScene = new Scene(properties, 300, 320);
         propertiesStage.setScene(propertiesScene);
 
         canvasStage.show();
