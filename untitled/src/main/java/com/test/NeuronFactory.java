@@ -1,14 +1,9 @@
 package com.test;
 
 import com.test.enums.NeuronTypes;
-import com.test.template.InputNeuron;
-import com.test.template.Layer;
-import com.test.template.Neuron;
-import com.test.template.OutputNeuron;
+import com.test.template.*;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,20 +12,17 @@ import java.util.function.Predicate;
 @Slf4j
 public class NeuronFactory {
     private static final ExecutorService executorService = Executors.newWorkStealingPool();
-    public static double err;
+    private NNTrain nnTrain;
+    private NN nn;
 
-    //лист входных нейронов
-    private static final List<InputNeuron> inputNeurons = new ArrayList<>();
-    //Нейроны на скрытых слоях
-    private static final List<Neuron> hiddenNeurons = new ArrayList<>();
-    // Скрытый слой нейронной сети.
-    // Необходим для расчетов.
-    // Расчеты нейронов на скрытом слое можно выполнять параллельно.
-    private static final List<Layer> hiddenLayers = new LinkedList<>();
-    //лист выходных нейронов
-    private static final List<OutputNeuron> outputNeurons = new ArrayList<>();
+    public NeuronFactory(NN nn) {
+        this.nn = nn;
+        nnTrain = new NNTrain();
+    }
 
-    public static void train(int epox, List<double[]> inputs, List<double[]> output) {
+    public void train(int epox, List<double[]> inputs, List<double[]> output) {
+        List<Neuron> hiddenNeurons = nn.getHiddenNeurons();
+        double err = nnTrain.getErr();
         for (int i = 0; i < epox; i++) {
 
             //region правим веса
@@ -51,12 +43,13 @@ public class NeuronFactory {
                 dendrites[dendriteNumber] = dendriteCurrentValue;
             }
         }
+        nnTrain.setErr(err);
     }
 
-    public static void trainWithCondition(Predicate<Double> isEnd, List<double[]> inputs, List<double[]> output) {
+    public void trainWithCondition(Predicate<Double> isEnd, List<double[]> inputs, List<double[]> output) {
         executorService.submit(() -> {
             try {
-                err = calcError(inputs, output);
+                double err = calcError(inputs, output);
                 while (!isEnd.test(err)) train(100000, inputs, output);
             } catch (Throwable th) {
                 log.error("Train err:", th);
@@ -64,7 +57,10 @@ public class NeuronFactory {
         });
     }
 
-    public static double[] calculate(double[] inputs) {
+    public double[] calculate(double[] inputs) {
+        List<InputNeuron> inputNeurons = nn.getInputNeurons();
+        List<Layer> hiddenLayers = nn.getHiddenLayers();
+        List<OutputNeuron> outputNeurons = nn.getOutputNeurons();
         // устанавливаю значения в входные нейроны
         for (int i = 0; i < inputNeurons.size(); i++) {
             inputNeurons.get(i).setAxon(inputs[i]);
@@ -103,7 +99,7 @@ public class NeuronFactory {
         return outputs;
     }
 
-    private static double calcError(List<double[]> inputs, List<double[]> output) {
+    private double calcError(List<double[]> inputs, List<double[]> output) {
         double err = 0;
         for (int j = 0; j < inputs.size(); j++) {
             double[] calculateResult = calculate(inputs.get(j));
@@ -115,7 +111,10 @@ public class NeuronFactory {
         return Math.sqrt(err / inputs.size());
     }
 
-    public static void removeNeuron(Neuron neuron) {
+    public void removeNeuron(Neuron neuron) {
+        List<Neuron> hiddenNeurons = nn.getHiddenNeurons();
+        List<InputNeuron> inputNeurons = nn.getInputNeurons();
+        List<OutputNeuron> outputNeurons = nn.getOutputNeurons();
         if (neuron instanceof InputNeuron) {
             inputNeurons.remove(neuron);
             hiddenNeurons.forEach(hiddenNeuron -> hiddenNeuron.removeInputNeuron(neuron));
@@ -127,7 +126,7 @@ public class NeuronFactory {
         }
     }
 
-    public static Neuron createNeuron(NeuronTypes neuronTypes) {
+    public Neuron createNeuron(NeuronTypes neuronTypes) {
         Neuron neuron = null;
         switch (neuronTypes) {
             case INPUT -> neuron = new InputNeuron();
@@ -138,17 +137,18 @@ public class NeuronFactory {
         return neuron;
     }
 
-    private static void addNeuron(Neuron neuron) {
+    private void addNeuron(Neuron neuron) {
         switch (neuron) {
-            case InputNeuron inputNeuron -> inputNeurons.add(inputNeuron);
-            case OutputNeuron outputNeuron -> outputNeurons.add(outputNeuron);
-            case Neuron hiddenNeuron -> hiddenNeurons.add(hiddenNeuron);
+            case InputNeuron inputNeuron -> nn.getInputNeurons().add(inputNeuron);
+            case OutputNeuron outputNeuron -> nn.getOutputNeurons().add(outputNeuron);
+            case Neuron hiddenNeuron -> nn.getHiddenNeurons().add(hiddenNeuron);
         }
     }
 
-    public static void bindNeurons(Neuron outputNeuron, Neuron inputNeuron) {
+    //todo поправить ошибку со слоями - если от текущего нейрона зависят нейроны на следующем слое, то создавать слой между ними и вставлять туда нейрон
+    public void bindNeurons(Neuron outputNeuron, Neuron inputNeuron) {
         inputNeuron.addInputNeuron(outputNeuron);
-
+        List<Layer> hiddenLayers = nn.getHiddenLayers();
         //добавляем или обновляем нейрон в слоях
         if (inputNeuron instanceof OutputNeuron) return;
 
@@ -171,7 +171,7 @@ public class NeuronFactory {
                 hiddenLayers.add(new Layer());
             }
         } else {
-            if(targetLayer + 1 == hiddenLayers.size()){
+            if (targetLayer + 1 == hiddenLayers.size()) {
                 hiddenLayers.add(new Layer());
             }
         }
@@ -188,7 +188,7 @@ public class NeuronFactory {
 
     }
 
-    private static boolean containSomeNeuron(List<Neuron> source, Neuron[] someOf) {
+    private boolean containSomeNeuron(List<Neuron> source, Neuron[] someOf) {
         for (Neuron neuron : source) {
             for (Neuron neuron1 : someOf) {
                 if (neuron == neuron1) return true;
