@@ -71,6 +71,10 @@ public class ApplicationContext {
 
     public class ManageWindowState {
 
+        public List<NeuronGraph> getNeuronGraphList() {
+            return ApplicationContext.this.neuronGraphList;
+        }
+
         public NeuronFactory getNeuronFactory() {
             return neuronFactory;
         }

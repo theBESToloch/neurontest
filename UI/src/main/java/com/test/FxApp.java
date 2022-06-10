@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SplitPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -47,9 +48,17 @@ public class FxApp extends Application {
         Stage propertiesStage = new Stage();
         propertiesStage.initOwner(canvasStage);
 
-        AnchorPane properties = load(getClass().getResource("/NeuronProperties.fxml"));
+        AnchorPane properties = load(getClass().getResource("/NeuronPropertiesWindow.fxml"));
         Scene propertiesScene = new Scene(properties, 300, 320);
         propertiesStage.setScene(propertiesScene);
+
+
+        Stage loadStage = new Stage();
+        loadStage.initOwner(canvasStage);
+
+        SplitPane load = load(getClass().getResource("/LoadWindow.fxml"));
+        Scene loadScene = new Scene(load, 600, 320);
+        loadStage.setScene(loadScene);
 
         canvasStage.show();
         manageStage.show();

@@ -2,27 +2,37 @@ package com.test.data;
 
 import com.test.enums.NeuronTypes;
 import com.test.template.Neuron;
+import org.springframework.scheduling.support.SimpleTriggerContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class NeuronGraph {
+    private static final AtomicLong counter = new AtomicLong(0);
+
+    private String id;
     private final double x;
     private final double y;
     private final double radius;
 
     private final NeuronTypes neuronTypes;
-    private final List<NeuronGraph> outputConnect;
-    private final List<NeuronGraph> inputConnect;
-    private Neuron neuron;
+    private final List<String> outputConnect;
+    private final List<String> inputConnect;
+    private long neuron;
 
     public NeuronGraph(double x, double y, double radius, NeuronTypes neuronTypes) {
+        this.id = String.valueOf(counter.addAndGet(1L));
         this.x = x;
         this.y = y;
         this.radius = radius;
         this.neuronTypes = neuronTypes;
         this.outputConnect = new ArrayList<>();
         this.inputConnect = new ArrayList<>();
+    }
+
+    public String getId() {
+        return id;
     }
 
     public boolean isOccupied(double x, double y) {
@@ -45,36 +55,36 @@ public class NeuronGraph {
         return neuronTypes;
     }
 
-    public Neuron getNeuron() {
+    public long getNeuron() {
         return neuron;
     }
 
-    public NeuronGraph setNeuron(Neuron neuron) {
+    public NeuronGraph setNeuron(long neuron) {
         this.neuron = neuron;
         return this;
     }
 
-    public void addOutputNeuronGraph(NeuronGraph neuronGraph) {
-        this.outputConnect.add(neuronGraph);
+    public void addOutputNeuronGraph(String neuronId) {
+        this.outputConnect.add(neuronId);
     }
 
-    public void removeNeuronGraphsFromOutput(NeuronGraph neuronGraph) {
-        outputConnect.remove(neuronGraph);
+    public void removeFromOutput(String neuronId) {
+        outputConnect.remove(neuronId);
     }
 
-    public List<NeuronGraph> getOutputConnect() {
+    public List<String> getOutputConnect() {
         return outputConnect;
     }
 
-    public void addInputNeuronGraph(NeuronGraph neuronGraph) {
-        this.inputConnect.add(neuronGraph);
+    public void addInputNeuronGraph(String neuronId) {
+        this.inputConnect.add(neuronId);
     }
 
-    public void removeNeuronGraphsFromInput(NeuronGraph neuronGraph) {
-        inputConnect.remove(neuronGraph);
+    public void removeFromInput(String neuronId) {
+        inputConnect.remove(neuronId);
     }
 
-    public List<NeuronGraph> getInputConnect() {
+    public List<String> getInputConnect() {
         return inputConnect;
     }
 }

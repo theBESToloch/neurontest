@@ -5,6 +5,7 @@ import com.test.template.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
@@ -12,8 +13,8 @@ import java.util.function.Predicate;
 @Slf4j
 public class NeuronFactory {
     private static final ExecutorService executorService = Executors.newWorkStealingPool();
-    private NNTrain nnTrain;
-    private NN nn;
+    private final NNTrain nnTrain;
+    private final NN nn;
 
     public NeuronFactory(NN nn) {
         this.nn = nn;
@@ -111,18 +112,21 @@ public class NeuronFactory {
         return Math.sqrt(err / inputs.size());
     }
 
-    public void removeNeuron(Neuron neuron) {
-        List<Neuron> hiddenNeurons = nn.getHiddenNeurons();
-        List<InputNeuron> inputNeurons = nn.getInputNeurons();
-        List<OutputNeuron> outputNeurons = nn.getOutputNeurons();
-        if (neuron instanceof InputNeuron) {
-            inputNeurons.remove(neuron);
-            hiddenNeurons.forEach(hiddenNeuron -> hiddenNeuron.removeInputNeuron(neuron));
-        } else if (neuron instanceof OutputNeuron) {
-            outputNeurons.remove(neuron);
-        } else {
-            hiddenNeurons.remove(neuron);
-            hiddenNeurons.forEach(hiddenNeuron -> hiddenNeuron.removeInputNeuron(neuron));
+    public void removeNeuron(long neuron) {
+        Optional<Neuron> hiddenNeuron = nn.getHiddenNeurons().stream().filter(hidden-> hidden.getId() == neuron).findFirst();
+        Optional<InputNeuron> inputNeuron = nn.getInputNeurons().stream().filter(input-> input.getId() == neuron).findFirst();
+        Optional<OutputNeuron> outputNeuron = nn.getOutputNeurons().stream().filter(output-> output.getId() == neuron).findFirst();
+
+
+
+        if (inputNeuron.isPresent()) {
+            nn.getInputNeurons().remove(inputNeuron.get());
+            nn.getHiddenNeurons().forEach(hidden -> hidden.removeInputNeuron(inputNeuron.get()));
+        } else if (outputNeuron.isPresent()) {
+            nn.getOutputNeurons().remove(outputNeuron.get());
+        } else if (hiddenNeuron.isPresent()) {
+            nn.getHiddenNeurons().remove(hiddenNeuron.get());
+            nn.getHiddenNeurons().forEach(hidden-> hidden.removeInputNeuron(hiddenNeuron.get()));
         }
     }
 
@@ -146,7 +150,11 @@ public class NeuronFactory {
     }
 
     //todo поправить ошибку со слоями - если от текущего нейрона зависят нейроны на следующем слое, то создавать слой между ними и вставлять туда нейрон
-    public void bindNeurons(Neuron outputNeuron, Neuron inputNeuron) {
+    public void bindNeurons(long outputNeuronId, long inputNeuronId) {
+
+        Neuron outputNeuron = getNeuron(outputNeuronId);
+        Neuron inputNeuron = getNeuron(inputNeuronId);
+
         inputNeuron.addInputNeuron(outputNeuron);
         List<Layer> hiddenLayers = nn.getHiddenLayers();
         //добавляем или обновляем нейрон в слоях
@@ -186,6 +194,19 @@ public class NeuronFactory {
 
         layer.addNeuron(inputNeuron);
 
+    }
+
+    private Neuron getNeuron(long neuronId) {
+        Optional<InputNeuron> input = nn.getInputNeurons().stream().filter(n -> n.getId() == neuronId).findFirst();
+        if(input.isPresent()) return input.get();
+
+        Optional<Neuron> hidden = nn.getHiddenNeurons().stream().filter(n -> n.getId() == neuronId).findFirst();
+        if(hidden.isPresent()) return hidden.get();
+
+        Optional<OutputNeuron> output = nn.getOutputNeurons().stream().filter(n -> n.getId() == neuronId).findFirst();
+        if(output.isPresent()) return output.get();
+
+        throw new RuntimeException("Нет такого нейрона");
     }
 
     private boolean containSomeNeuron(List<Neuron> source, Neuron[] someOf) {

@@ -3,6 +3,7 @@ package com.test.UIControllers;
 import com.test.context.ApplicationContext;
 import com.test.data.enums.ActionTypes;
 import com.test.enums.NeuronTypes;
+import com.test.persistence.services.NNDescriptionService;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
@@ -11,13 +12,17 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Component;
 
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.ResourceBundle;
 
 @Slf4j
-@Controller
+@Component
 public class ManageWindowController implements Initializable {
     public ChoiceBox<String> choiceBox;
     public Button addNeuron;

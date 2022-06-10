@@ -3,34 +3,55 @@ package com.test.UIControllers;
 import com.test.context.ApplicationContext;
 import com.test.data.NeuronGraph;
 import com.test.enums.NeuronTypes;
+import com.test.events.ModelLoadEvent;
 import com.test.events.NeuronPropertiesViewEvent;
+import com.test.persistence.entities.NNPreview;
+import com.test.persistence.services.NNDescriptionService;
 import com.test.template.Neuron;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.event.ActionEvent;
+import javafx.fxml.Initializable;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import javafx.scene.transform.Scale;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Component;
 
+import javax.imageio.ImageIO;
+import java.awt.image.RenderedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.ResourceBundle;
 
 @Slf4j
-@Controller
-public class CanvasWindowController {
+@Component
+public class CanvasWindowController implements Initializable {
 
     public Canvas canvas;
     public ScrollPane scrollPane;
-
+    public ContextMenu canvasContextMenu;
 
     private final ApplicationContext.CanvasWindowState state;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final NNDescriptionService nnDescriptionService;
 
     public CanvasWindowController(ApplicationContext.CanvasWindowState state,
-                                  ApplicationEventPublisher applicationEventPublisher) {
+                                  ApplicationEventPublisher applicationEventPublisher,
+                                  NNDescriptionService nnDescriptionService) {
         this.state = state;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.nnDescriptionService = nnDescriptionService;
     }
 
     public void onMouseClick(MouseEvent mouseEvent) {
@@ -57,7 +78,7 @@ public class CanvasWindowController {
                 case ADD -> {
                     NeuronGraph addedNeuron = new NeuronGraph(x1, y1, RADIUS, state.getNeuronType());
                     Neuron neuron = state.getNeuronFactory().createNeuron(state.getNeuronType());
-                    addedNeuron.setNeuron(neuron);
+                    addedNeuron.setNeuron(neuron.getId());
                     addNeuronGraph(addedNeuron);
                 }
                 case REMOVE, VIEW -> {
@@ -86,14 +107,23 @@ public class CanvasWindowController {
     }
 
     private void removeNeuronGraph(NeuronGraph neuronGraph) {
-        for (NeuronGraph graph : neuronGraph.getInputConnect()) {
-            graph.removeNeuronGraphsFromOutput(neuronGraph);
+        for (String graphId : neuronGraph.getInputConnect()) {
+            state.getNeuronGraphList()
+                    .stream()
+                    .filter(neuronGraph1 -> neuronGraph1.getId().equals(graphId))
+                    .findFirst()
+                    .ifPresent(neuronGraph1 -> neuronGraph1.removeFromOutput(neuronGraph.getId()));
         }
 
         neuronGraph.getInputConnect().clear();
 
-        for (NeuronGraph graph : neuronGraph.getOutputConnect()) {
-            graph.removeNeuronGraphsFromInput(neuronGraph);
+        for (String graphId : neuronGraph.getOutputConnect()) {
+            state.getNeuronGraphList()
+                    .stream()
+                    .filter(neuronGraph1 -> neuronGraph1.getId().equals(graphId))
+                    .findFirst()
+                    .ifPresent(neuronGraph1 -> neuronGraph1.removeFromInput(neuronGraph.getId()));
+
         }
         neuronGraph.getOutputConnect().clear();
 
@@ -127,10 +157,10 @@ public class CanvasWindowController {
     }
 
     private void addSynapse(NeuronGraph from, NeuronGraph to) {
-        if (from.getNeuron().getId() != to.getNeuron().getId()) {
+        if (from.getNeuron() != to.getNeuron()) {
             state.getNeuronFactory().bindNeurons(from.getNeuron(), to.getNeuron());
-            from.addOutputNeuronGraph(to);
-            to.addInputNeuronGraph(from);
+            from.addOutputNeuronGraph(to.getId());
+            to.addInputNeuronGraph(from.getId());
             updateNeuronsGraph();
         }
     }
@@ -148,8 +178,9 @@ public class CanvasWindowController {
         }
 
         for (NeuronGraph neuronGraph : state.getNeuronGraphList()) {
-            for (NeuronGraph graph : neuronGraph.getInputConnect()) {
-                graphicsContext2D.strokeLine(graph.getX(), graph.getY(), neuronGraph.getX(), neuronGraph.getY());
+            for (String neuronId : neuronGraph.getInputConnect()) {
+                Optional<NeuronGraph> first = state.getNeuronGraphList().stream().filter(neuronGraph1 -> neuronGraph1.getId().equals(neuronId)).findFirst();
+                graphicsContext2D.strokeLine(first.get().getX(), first.get().getY(), neuronGraph.getX(), neuronGraph.getY());
             }
         }
     }
@@ -169,5 +200,43 @@ public class CanvasWindowController {
                 throw new RuntimeException("Неуказан тип");
             }
         }
+    }
+
+    public void onContextSaveButtonMouseClick(ActionEvent mouseEvent) {
+        canvasContextMenu.hide();
+        try {
+            WritableImage image = new WritableImage(480, 320);
+            SnapshotParameters params = new SnapshotParameters();
+            params.setTransform(new Scale(480 / canvas.getWidth(), 320 / canvas.getHeight()));
+            canvas.snapshot(params, image);
+
+            RenderedImage renderedImage = SwingFXUtils.fromFXImage(image, null);
+            ByteArrayOutputStream imagePreview = new ByteArrayOutputStream();
+            ImageIO.write(renderedImage, "png", imagePreview);
+
+            nnDescriptionService.save(state.getNeuronGraphList(), new NNPreview()
+                    .setDate(LocalDateTime.now())
+                    .setPreviewImage(imagePreview.toByteArray()));
+
+        } catch (IOException e) {
+            log.error("Error save image: ", e);
+        }
+    }
+
+    public void onContextLoadButtonMouseClick(ActionEvent mouseEvent) {
+        canvasContextMenu.hide();
+        applicationEventPublisher.publishEvent(new ModelLoadEvent());
+    }
+
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        MenuItem saveButton = new MenuItem("Сохранить");
+        saveButton.setOnAction(this::onContextSaveButtonMouseClick);
+
+        MenuItem loadButton = new MenuItem("Загрузить");
+        loadButton.setOnAction(this::onContextLoadButtonMouseClick);
+
+        canvasContextMenu.getItems().addAll(saveButton, loadButton);
     }
 }

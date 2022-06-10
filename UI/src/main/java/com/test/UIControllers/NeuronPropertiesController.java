@@ -3,7 +3,6 @@ package com.test.UIControllers;
 import com.test.data.NeuronGraph;
 import com.test.data.dto.NeuronPropertiesDendriteTableColumns;
 import com.test.events.NeuronPropertiesViewEvent;
-import com.test.template.Neuron;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
@@ -12,15 +11,14 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
 
-@Controller
+@Component
 public class NeuronPropertiesController implements Initializable {
 
     @FXML
@@ -44,17 +42,17 @@ public class NeuronPropertiesController implements Initializable {
     public void show(NeuronPropertiesViewEvent event) {
         NeuronGraph neuronGraph = event.getNeuronGraph();
 
-        neuronId.setText(String.valueOf(neuronGraph.getNeuron().getId()));
+        neuronId.setText(String.valueOf(neuronGraph.getNeuron()));
         dendritesTable.getItems().clear();
-        Neuron[] inputNeurons = neuronGraph.getNeuron().getInputNeurons();
+        /* Neuron[] inputNeurons = neuronGraph.getNeuron().getInputNeurons();
         double[] dendrites = neuronGraph.getNeuron().getDendrites();
         for (int i = 0; i < inputNeurons.length; i++) {
             dendritesTable
                     .getItems()
                     .add(new NeuronPropertiesDendriteTableColumns(inputNeurons[i].getId(), dendrites[i]));
-        }
+        }*/
         Stage window = (Stage) anchorPane.getScene().getWindow();
-        Stage owner = (Stage)window.getOwner();
+        Stage owner = (Stage) window.getOwner();
         window.setX(owner.getX() + owner.getWidth());
         window.setY(owner.getY());
         window.show();
