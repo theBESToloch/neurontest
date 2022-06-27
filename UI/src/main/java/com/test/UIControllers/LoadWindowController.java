@@ -1,6 +1,8 @@
 package com.test.UIControllers;
 
-import com.test.events.ModelLoadEvent;
+import com.test.context.ApplicationContext;
+import com.test.events.LoadModelEvent;
+import com.test.events.ShowModelLoadWindowEvent;
 import com.test.persistence.entities.NNDescription;
 import com.test.persistence.services.NNDescriptionService;
 import javafx.beans.value.ObservableValue;
@@ -18,12 +20,14 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.net.URL;
-import java.util.List;
 import java.util.ResourceBundle;
 
 @Slf4j
@@ -34,17 +38,22 @@ public class LoadWindowController implements Initializable {
     public SplitPane splitPane;
     public ListView<NNDescription> listView;
     public ImageView imageView;
-
-    private final NNDescriptionService nnDescriptionService;
     public ContextMenu contextMenu;
 
+    private final NNDescriptionService nnDescriptionService;
+    private final ApplicationContext.LoadWindowState loadWindowState;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public LoadWindowController(NNDescriptionService nnDescriptionService) {
+    public LoadWindowController(NNDescriptionService nnDescriptionService,
+                                ApplicationContext.LoadWindowState loadWindowState,
+                                ApplicationEventPublisher applicationEventPublisher) {
         this.nnDescriptionService = nnDescriptionService;
+        this.loadWindowState = loadWindowState;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @EventListener
-    public void show(ModelLoadEvent event) {
+    public void show(ShowModelLoadWindowEvent event) {
         updateItems();
 
         Stage window = (Stage) splitPane.getScene().getWindow();
@@ -54,10 +63,10 @@ public class LoadWindowController implements Initializable {
     private void updateItems() {
         listView.getItems().clear();
 
-        List<NNDescription> nnDescriptions = nnDescriptionService.load();
-        listView.getItems().addAll(nnDescriptions);
+        Page<NNDescription> nnDescriptions = nnDescriptionService.load(PageRequest.of(0, 20));
+        listView.getItems().addAll(nnDescriptions.getContent());
 
-        setPreviewImage(!nnDescriptions.isEmpty() ? nnDescriptions.get(0) : null);
+        setPreviewImage(!nnDescriptions.isEmpty() ? nnDescriptions.getContent().get(0) : null);
     }
 
     @Override
@@ -95,7 +104,19 @@ public class LoadWindowController implements Initializable {
         MenuItem deleteButton = new MenuItem("Удалить");
         deleteButton.setOnAction(this::onContextDeleteButtonMouseClick);
 
-        contextMenu.getItems().addAll(deleteButton);
+        MenuItem openButton = new MenuItem("Открыть");
+        openButton.setOnAction(this::onContextOpenButtonMouseClick);
+
+        contextMenu.getItems().addAll(openButton, deleteButton);
+    }
+
+    private void onContextOpenButtonMouseClick(ActionEvent actionEvent) {
+        contextMenu.hide();
+        NNDescription selectedItem = listView.getSelectionModel().getSelectedItem();
+        splitPane.getScene().getWindow().hide();
+
+        loadWindowState.setNeuronGraphList(selectedItem.getStruct());
+        applicationEventPublisher.publishEvent(new LoadModelEvent());
     }
 
     private void onContextDeleteButtonMouseClick(ActionEvent actionEvent) {
@@ -105,7 +126,8 @@ public class LoadWindowController implements Initializable {
         updateItems();
     }
 
-    private void onSelectListener(ObservableValue<? extends NNDescription> observable, NNDescription oldValue, NNDescription newValue) {
+    private void onSelectListener(ObservableValue<? extends NNDescription> observable,
+                                  NNDescription oldValue, NNDescription newValue) {
         setPreviewImage(newValue);
     }
 

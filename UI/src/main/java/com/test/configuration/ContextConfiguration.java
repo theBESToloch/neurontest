@@ -21,4 +21,9 @@ public class ContextConfiguration {
     public ApplicationContext.CanvasWindowState canvasWindowState(ApplicationContext applicationContext) {
         return applicationContext.new CanvasWindowState();
     }
+
+    @Bean
+    public ApplicationContext.LoadWindowState loadWindowState(ApplicationContext applicationContext) {
+        return applicationContext.new LoadWindowState();
+    }
 }

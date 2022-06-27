@@ -107,4 +107,10 @@ public class ApplicationContext {
             ApplicationContext.this.isTrainButton = trainButton;
         }
     }
+
+    public class LoadWindowState{
+        public void setNeuronGraphList(List<NeuronGraph> neuronGraphList){
+            ApplicationContext.this.neuronGraphList = neuronGraphList;
+        }
+    }
 }

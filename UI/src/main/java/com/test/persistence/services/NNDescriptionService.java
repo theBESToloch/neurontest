@@ -4,6 +4,8 @@ import com.test.data.NeuronGraph;
 import com.test.persistence.entities.NNDescription;
 import com.test.persistence.entities.NNPreview;
 import com.test.persistence.repositories.NNDescriptionRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,8 +19,8 @@ public class NNDescriptionService {
         this.nnDescriptionRepository = nnDescriptionRepository;
     }
 
-    public List<NNDescription> load() {
-        return nnDescriptionRepository.findAll();
+    public Page<NNDescription> load(Pageable pageable) {
+        return nnDescriptionRepository.findAll(pageable);
     }
 
     public NNDescription save(List<NeuronGraph> struct, NNPreview nnPreview) {

@@ -3,7 +3,8 @@ package com.test.UIControllers;
 import com.test.context.ApplicationContext;
 import com.test.data.NeuronGraph;
 import com.test.enums.NeuronTypes;
-import com.test.events.ModelLoadEvent;
+import com.test.events.LoadModelEvent;
+import com.test.events.ShowModelLoadWindowEvent;
 import com.test.events.NeuronPropertiesViewEvent;
 import com.test.persistence.entities.NNPreview;
 import com.test.persistence.services.NNDescriptionService;
@@ -23,6 +24,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.transform.Scale;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
@@ -225,9 +227,13 @@ public class CanvasWindowController implements Initializable {
 
     public void onContextLoadButtonMouseClick(ActionEvent mouseEvent) {
         canvasContextMenu.hide();
-        applicationEventPublisher.publishEvent(new ModelLoadEvent());
+        applicationEventPublisher.publishEvent(new ShowModelLoadWindowEvent());
     }
 
+    @EventListener
+    public void LoadModelEventListener(LoadModelEvent event){
+        updateNeuronsGraph();
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
