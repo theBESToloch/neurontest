@@ -1,8 +1,6 @@
 package com.test.data;
 
 import com.test.enums.NeuronTypes;
-import com.test.template.Neuron;
-import org.springframework.scheduling.support.SimpleTriggerContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class NeuronGraph {
     private static final AtomicLong counter = new AtomicLong(0);
 
-    private String id;
+    private final String id;
     private final double x;
     private final double y;
     private final double radius;

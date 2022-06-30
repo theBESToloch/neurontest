@@ -71,6 +71,16 @@ public class ApplicationContext {
 
     public class ManageWindowState {
 
+        private int count = 20;
+        private List<double[]> inputVectors;
+        private List<double[]> outputVectors;
+
+        public void setVectors(List<double[]> inputVectors, List<double[]> outputVectors){
+            this.inputVectors = inputVectors;
+            this.outputVectors = outputVectors;
+        }
+
+
         public List<NeuronGraph> getNeuronGraphList() {
             return ApplicationContext.this.neuronGraphList;
         }
@@ -79,20 +89,8 @@ public class ApplicationContext {
             return neuronFactory;
         }
 
-        public void setNeuronFactory(NeuronFactory neuronFactory) {
-            ApplicationContext.this.neuronFactory = neuronFactory;
-        }
-
-        public ActionTypes getActionType() {
-            return actionType;
-        }
-
         public void setActionType(ActionTypes actionType) {
             ApplicationContext.this.actionType = actionType;
-        }
-
-        public NeuronTypes getNeuronType() {
-            return neuronType;
         }
 
         public void setNeuronType(NeuronTypes neuronType) {
@@ -105,6 +103,18 @@ public class ApplicationContext {
 
         public void setTrainButton(boolean trainButton) {
             ApplicationContext.this.isTrainButton = trainButton;
+        }
+
+        public List<double[]> getInputVectors() {
+            return inputVectors;
+        }
+
+        public List<double[]> getOutputVectors() {
+            return outputVectors;
+        }
+
+        public int getCount() {
+            return count;
         }
     }
 
