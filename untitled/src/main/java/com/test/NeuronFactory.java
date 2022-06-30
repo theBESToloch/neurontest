@@ -50,8 +50,10 @@ public class NeuronFactory {
     public void trainWithCondition(Predicate<Double> isEnd, List<double[]> inputs, List<double[]> output) {
         executorService.submit(() -> {
             try {
-                double err = calcError(inputs, output);
-                while (!isEnd.test(err)) train(100000, inputs, output);
+                nnTrain.setErr(calcError(inputs, output));
+                while (!isEnd.test(nnTrain.getErr())) {
+                    train(100000, inputs, output);
+                }
             } catch (Throwable th) {
                 log.error("Train err:", th);
             }
