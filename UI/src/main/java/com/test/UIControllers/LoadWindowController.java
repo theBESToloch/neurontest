@@ -3,8 +3,8 @@ package com.test.UIControllers;
 import com.test.context.ApplicationContext;
 import com.test.events.LoadModelEvent;
 import com.test.events.ShowModelLoadWindowEvent;
-import com.test.persistence.entities.NNDescription;
-import com.test.persistence.services.NNDescriptionService;
+import com.test.persistence.entities.NNPreview;
+import com.test.persistence.services.NNPreviewService;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
@@ -36,18 +37,18 @@ public class LoadWindowController implements Initializable {
 
     @FXML
     public SplitPane splitPane;
-    public ListView<NNDescription> listView;
+    public ListView<NNPreview> listView;
     public ImageView imageView;
     public ContextMenu contextMenu;
 
-    private final NNDescriptionService nnDescriptionService;
+    private final NNPreviewService nnPreviewService;
     private final ApplicationContext.LoadWindowState loadWindowState;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public LoadWindowController(NNDescriptionService nnDescriptionService,
+    public LoadWindowController(NNPreviewService nnPreviewService,
                                 ApplicationContext.LoadWindowState loadWindowState,
                                 ApplicationEventPublisher applicationEventPublisher) {
-        this.nnDescriptionService = nnDescriptionService;
+        this.nnPreviewService = nnPreviewService;
         this.loadWindowState = loadWindowState;
         this.applicationEventPublisher = applicationEventPublisher;
     }
@@ -63,10 +64,10 @@ public class LoadWindowController implements Initializable {
     private void updateItems() {
         listView.getItems().clear();
 
-        Page<NNDescription> nnDescriptions = nnDescriptionService.load(PageRequest.of(0, 20));
-        listView.getItems().addAll(nnDescriptions.getContent());
+        Page<NNPreview> nnPreviews = nnPreviewService.load(PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC,"date")));
+        listView.getItems().addAll(nnPreviews.getContent());
 
-        setPreviewImage(!nnDescriptions.isEmpty() ? nnDescriptions.getContent().get(0) : null);
+        setPreviewImage(!nnPreviews.isEmpty() ? nnPreviews.getContent().get(0) : null);
     }
 
     @Override
@@ -74,18 +75,18 @@ public class LoadWindowController implements Initializable {
         listView = new ListView<>();
         listView.setCellFactory(callBack -> new ListCell<>() {
             @Override
-            public void updateItem(NNDescription nnDescription, boolean empty) {
-                super.updateItem(nnDescription, empty);
-                if (empty || nnDescription == null) {
+            public void updateItem(NNPreview nnPreview, boolean empty) {
+                super.updateItem(nnPreview, empty);
+                if (empty || nnPreview == null) {
                     setText(null);
                 } else {
-                    setText(String.valueOf(nnDescription.getId()));
+                    setText(String.valueOf(nnPreview.getId()));
                 }
             }
         });
 
         // получаем модель выбора элементов
-        MultipleSelectionModel<NNDescription> selectionModel = listView.getSelectionModel();
+        MultipleSelectionModel<NNPreview> selectionModel = listView.getSelectionModel();
         // устанавливаем слушатель для отслеживания изменений
         selectionModel.selectedItemProperty().addListener(this::onSelectListener);
 
@@ -112,29 +113,29 @@ public class LoadWindowController implements Initializable {
 
     private void onContextOpenButtonMouseClick(ActionEvent actionEvent) {
         contextMenu.hide();
-        NNDescription selectedItem = listView.getSelectionModel().getSelectedItem();
+        NNPreview selectedItem = listView.getSelectionModel().getSelectedItem();
         splitPane.getScene().getWindow().hide();
 
-        loadWindowState.setNeuronGraphList(selectedItem.getStruct());
+        loadWindowState.setNeuronGraphList(selectedItem.getNnDescription().getStruct());
         applicationEventPublisher.publishEvent(new LoadModelEvent());
     }
 
     private void onContextDeleteButtonMouseClick(ActionEvent actionEvent) {
         contextMenu.hide();
-        NNDescription selectedItem = listView.getSelectionModel().getSelectedItem();
-        nnDescriptionService.delete(selectedItem.getId());
+        NNPreview selectedItem = listView.getSelectionModel().getSelectedItem();
+        nnPreviewService.delete(selectedItem.getId());
         updateItems();
     }
 
-    private void onSelectListener(ObservableValue<? extends NNDescription> observable,
-                                  NNDescription oldValue, NNDescription newValue) {
+    private void onSelectListener(ObservableValue<? extends NNPreview> observable,
+                                  NNPreview oldValue, NNPreview newValue) {
         setPreviewImage(newValue);
     }
 
-    private void setPreviewImage(NNDescription nnDescription) {
+    private void setPreviewImage(NNPreview nnPreview) {
         imageView.setImage(null);
-        if (nnDescription == null) return;
-        byte[] previewImage = nnDescription.getNnPreview().getPreviewImage();
+        if (nnPreview == null) return;
+        byte[] previewImage = nnPreview.getPreviewImage();
         Image value = new Image(new ByteArrayInputStream(previewImage));
         imageView.setImage(value);
     }

@@ -8,6 +8,7 @@ import lombok.experimental.Accessors;
 import org.hibernate.annotations.Type;
 import org.springframework.context.annotation.Lazy;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -46,6 +47,6 @@ public class NNPreview {
     @Lazy
     private byte[] previewImage;
 
-    @OneToOne(mappedBy = "nnPreview")
+    @OneToOne(mappedBy = "nnPreview", cascade = CascadeType.ALL)
     private NNDescription nnDescription;
 }
