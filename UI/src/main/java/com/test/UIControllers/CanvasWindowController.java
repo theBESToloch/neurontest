@@ -209,9 +209,16 @@ public class CanvasWindowController implements Initializable {
     public void onContextSaveButtonMouseClick(ActionEvent mouseEvent) {
         canvasContextMenu.hide();
         try {
-            WritableImage image = new WritableImage(480, 320);
+            int width = 480;
+            int height = 320;
+
+            double min = Math.min(480 / canvas.getWidth(), 320 / canvas.getHeight());
+
+            WritableImage image = new WritableImage(width, height);
+
             SnapshotParameters params = new SnapshotParameters();
-            params.setTransform(new Scale(480 / canvas.getWidth(), 320 / canvas.getHeight()));
+            params.setTransform(new Scale(min, min));
+
             canvas.snapshot(params, image);
 
             RenderedImage renderedImage = SwingFXUtils.fromFXImage(image, null);
