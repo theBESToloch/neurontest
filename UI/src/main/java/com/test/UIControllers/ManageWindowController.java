@@ -3,7 +3,6 @@ package com.test.UIControllers;
 import com.test.context.ApplicationContext;
 import com.test.data.enums.ActionTypes;
 import com.test.enums.NeuronTypes;
-import com.test.persistence.services.NNDescriptionService;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;

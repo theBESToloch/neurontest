@@ -4,7 +4,7 @@ import com.test.context.ApplicationContext;
 import com.test.events.LoadModelEvent;
 import com.test.events.ShowModelLoadWindowEvent;
 import com.test.persistence.entities.NNDescription;
-import com.test.persistence.services.NNDescriptionService;
+import com.test.persistence.services.NNDescriptionServiceImpl;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -40,11 +40,11 @@ public class LoadWindowController implements Initializable {
     public ImageView imageView;
     public ContextMenu contextMenu;
 
-    private final NNDescriptionService nnDescriptionService;
+    private final NNDescriptionServiceImpl nnDescriptionService;
     private final ApplicationContext.LoadWindowState loadWindowState;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public LoadWindowController(NNDescriptionService nnDescriptionService,
+    public LoadWindowController(NNDescriptionServiceImpl nnDescriptionService,
                                 ApplicationContext.LoadWindowState loadWindowState,
                                 ApplicationEventPublisher applicationEventPublisher) {
         this.nnDescriptionService = nnDescriptionService;
