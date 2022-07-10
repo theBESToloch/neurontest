@@ -5,7 +5,6 @@ import com.test.data.NeuronGraph;
 import com.test.enums.NeuronTypes;
 import com.test.events.LoadModelEvent;
 import com.test.events.ShowModelLoadWindowEvent;
-import com.test.events.NeuronPropertiesViewEvent;
 import com.test.persistence.entities.NNPreview;
 import com.test.persistence.services.NNDescriptionService;
 import com.test.template.Neuron;
@@ -85,7 +84,7 @@ public class CanvasWindowController implements Initializable {
                     addedNeuron.setNeuron(neuron.getId());
                     addNeuronGraph(addedNeuron);
                 }
-                case REMOVE, VIEW -> {
+                case REMOVE -> {
                 }
             }
         }
@@ -96,10 +95,6 @@ public class CanvasWindowController implements Initializable {
                 case REMOVE -> {
                     NeuronGraph removedNeuron = first.get();
                     removeNeuronGraph(removedNeuron);
-                }
-                case VIEW -> {
-                    NeuronGraph viewNeuron = first.get();
-                    applicationEventPublisher.publishEvent(new NeuronPropertiesViewEvent(viewNeuron));
                 }
             }
         }
