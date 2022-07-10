@@ -49,10 +49,6 @@ public class ManageWindowController implements Initializable {
         state.setActionType(ActionTypes.REMOVE);
     }
 
-    public void onView(ActionEvent actionEvent) {
-        state.setActionType(ActionTypes.VIEW);
-    }
-
     public void test(MouseEvent mouseEvent) {
         currentError.setText("");
         double err = 0;
