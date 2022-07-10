@@ -13,13 +13,23 @@
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <!-- use the previously created timestamp to create a uniquely
              named log file -->
-        <file>log-${bySecond}.txt</file>
+        <file>log.txt</file>
         <encoder>
             <pattern>%logger{35} - %msg%n</pattern>
         </encoder>
     </appender>
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
     </root>
+    <!-- <logger name="org.hibernate" additivity="false">
+        <level value="TRACE" />
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </logger>
+    <logger name="org.hibernate.type" additivity="false">
+        <level value="TRACE" />
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </logger> -->
 </configuration>
