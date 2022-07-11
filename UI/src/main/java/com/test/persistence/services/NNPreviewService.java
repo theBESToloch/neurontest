@@ -8,5 +8,4 @@ import java.time.LocalDateTime;
 
 public interface NNPreviewService {
     NNPreview save(ByteArrayOutputStream imagePreview);
-    NNPreview nnPreview = new NNPreview();
 }
