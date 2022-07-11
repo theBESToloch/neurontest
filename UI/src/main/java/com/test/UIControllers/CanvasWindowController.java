@@ -7,7 +7,7 @@ import com.test.events.LoadModelEvent;
 import com.test.events.ShowModelLoadWindowEvent;
 import com.test.events.NeuronPropertiesViewEvent;
 import com.test.persistence.entities.NNPreview;
-import com.test.persistence.services.NNDescriptionServiceImpl;
+import com.test.persistence.services.NNDescriptionService;
 import com.test.template.Neuron;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
@@ -46,11 +46,11 @@ public class CanvasWindowController implements Initializable {
 
     private final ApplicationContext.CanvasWindowState state;
     private final ApplicationEventPublisher applicationEventPublisher;
-    private final NNDescriptionServiceImpl nnDescriptionService;
+    private final NNDescriptionService nnDescriptionService;
 
     public CanvasWindowController(ApplicationContext.CanvasWindowState state,
                                   ApplicationEventPublisher applicationEventPublisher,
-                                  NNDescriptionServiceImpl nnDescriptionService) {
+                                  NNDescriptionService nnDescriptionService) {
         this.state = state;
         this.applicationEventPublisher = applicationEventPublisher;
         this.nnDescriptionService = nnDescriptionService;

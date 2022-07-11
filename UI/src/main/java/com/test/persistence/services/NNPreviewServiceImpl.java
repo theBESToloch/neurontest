@@ -10,9 +10,9 @@ import java.time.LocalDateTime;
 @Service
 public class NNPreviewServiceImpl implements NNPreviewService {
 
-    private final NNPreviewRepository  nnPreviewRepository;
+    private final NNPreviewRepository nnPreviewRepository;
 
-    public NNPreviewServiceImpl (NNPreviewRepository nnPreviewRepository) {
+    public NNPreviewServiceImpl(NNPreviewRepository nnPreviewRepository) {
         this.nnPreviewRepository = nnPreviewRepository;
     }
 
