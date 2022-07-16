@@ -1,13 +1,17 @@
 package com.test.UIControllers;
 
 import com.test.context.ApplicationContext;
+import com.test.context.ButtonClickState;
+import com.test.context.EventHandler;
+import com.test.context.EventHandlerRegistrar;
+import com.test.context.MouseEventCode;
 import com.test.data.NeuronGraph;
 import com.test.enums.NeuronTypes;
 import com.test.events.LoadModelEvent;
+import com.test.events.NeedUpdateCanvasEvent;
 import com.test.events.ShowModelLoadWindowEvent;
 import com.test.persistence.entities.NNPreview;
 import com.test.persistence.services.NNDescriptionService;
-import com.test.template.Neuron;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
@@ -18,11 +22,13 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.WritableImage;
-import javafx.scene.input.MouseButton;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Scale;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -33,8 +39,20 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
+
+import static com.test.context.MouseEventCode.MOUSE_DRAGGED;
+import static com.test.context.MouseEventCode.MOUSE_PRESSED;
+import static com.test.context.MouseEventCode.MOUSE_RELEASED;
+import static com.test.handlers.AddNeuronEventHandler.ADD_NEURON_CODE;
+import static com.test.handlers.NeuronMoveEventHandler.NEURON_MOVE_CODE;
+import static com.test.handlers.RemoveNeuronEventHandler.REMOVE_NEURON_CODE;
+import static com.test.handlers.SelectNeuronEventHandler.SELECT_NEURON_CODE;
+import static javafx.scene.input.KeyCode.ALT;
+import static javafx.scene.input.KeyCode.CONTROL;
+import static javafx.scene.input.KeyCode.DELETE;
 
 @Slf4j
 @Component
@@ -47,112 +65,69 @@ public class CanvasWindowController implements Initializable {
     private final ApplicationContext.CanvasWindowState state;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final NNDescriptionService nnDescriptionService;
+    private final ButtonClickState buttonClickState;
 
     public CanvasWindowController(ApplicationContext.CanvasWindowState state,
                                   ApplicationEventPublisher applicationEventPublisher,
-                                  NNDescriptionService nnDescriptionService) {
+                                  NNDescriptionService nnDescriptionService,
+                                  ButtonClickState buttonClickState,
+                                  EventHandlerRegistrar handlerRegistrar,
+                                  @Qualifier("eventHandlers") Map<String, EventHandler> eventHandlerMap
+    ) {
         this.state = state;
         this.applicationEventPublisher = applicationEventPublisher;
         this.nnDescriptionService = nnDescriptionService;
+        this.buttonClickState = buttonClickState;
+
+        handlerRegistrar.register(new KeyCode[]{ALT}, new MouseEventCode[]{MOUSE_PRESSED, MOUSE_DRAGGED},
+                eventHandlerMap.get(NEURON_MOVE_CODE));
+        handlerRegistrar.register(null, new MouseEventCode[]{MOUSE_PRESSED, MOUSE_RELEASED},
+                eventHandlerMap.get(ADD_NEURON_CODE));
+        handlerRegistrar.register(new KeyCode[]{CONTROL}, new MouseEventCode[]{MOUSE_PRESSED, MOUSE_RELEASED},
+                eventHandlerMap.get(SELECT_NEURON_CODE));
+        handlerRegistrar.register(new KeyCode[]{DELETE}, null,
+                eventHandlerMap.get(REMOVE_NEURON_CODE));
     }
 
-    public void onMouseClick(MouseEvent mouseEvent) {
-        if (mouseEvent.getButton() == MouseButton.SECONDARY) {
-            return;
-        }
-        double layoutX = canvas.getLayoutX();
-        double layoutY = canvas.getLayoutY();
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        MenuItem saveButton = new MenuItem("Сохранить");
+        saveButton.setOnAction(this::onContextSaveButtonMouseClick);
 
-        double x = mouseEvent.getX();
-        double y = mouseEvent.getY();
+        MenuItem loadButton = new MenuItem("Загрузить");
+        loadButton.setOnAction(this::onContextLoadButtonMouseClick);
 
-        double x1 = x - layoutX;
-        double y1 = y - layoutY;
-
-        final Optional<NeuronGraph> first = state.getNeuronGraphList()
-                .stream()
-                .filter(neuronGraph -> neuronGraph.isOccupied(x1, y1))
-                .findFirst();
-
-        double RADIUS = 10;
-
-        if (first.isEmpty()) {
-            switch (state.getActionType()) {
-                case ADD -> {
-                    NeuronGraph addedNeuron = new NeuronGraph(x1, y1, RADIUS, state.getNeuronType());
-                    Neuron neuron = state.getNeuronFactory().createNeuron(state.getNeuronType());
-                    addedNeuron.setNeuron(neuron.getId());
-                    addNeuronGraph(addedNeuron);
-                }
-                case REMOVE -> {
-                }
-            }
-        }
-        if (first.isPresent()) {
-            switch (state.getActionType()) {
-                case ADD -> {
-                }
-                case REMOVE -> {
-                    NeuronGraph removedNeuron = first.get();
-                    removeNeuronGraph(removedNeuron);
-                }
-            }
-        }
-    }
-
-    private void addNeuronGraph(NeuronGraph neuronGraph) {
-        state.getNeuronGraphList().add(neuronGraph);
-        updateNeuronsGraph();
-    }
-
-    private void removeNeuronGraph(NeuronGraph neuronGraph) {
-        for (String graphId : neuronGraph.getInputConnect()) {
-            state.getNeuronGraphList()
-                    .stream()
-                    .filter(neuronGraph1 -> neuronGraph1.getId().equals(graphId))
-                    .findFirst()
-                    .ifPresent(neuronGraph1 -> neuronGraph1.removeFromOutput(neuronGraph.getId()));
-        }
-
-        neuronGraph.getInputConnect().clear();
-
-        for (String graphId : neuronGraph.getOutputConnect()) {
-            state.getNeuronGraphList()
-                    .stream()
-                    .filter(neuronGraph1 -> neuronGraph1.getId().equals(graphId))
-                    .findFirst()
-                    .ifPresent(neuronGraph1 -> neuronGraph1.removeFromInput(neuronGraph.getId()));
-
-        }
-        neuronGraph.getOutputConnect().clear();
-
-        state.getNeuronFactory().removeNeuron(neuronGraph.getNeuron());
-
-        state.getNeuronGraphList().remove(neuronGraph);
-
-        updateNeuronsGraph();
+        canvasContextMenu.getItems().addAll(saveButton, loadButton);
     }
 
     public void onMousePressed(MouseEvent mouseEvent) {
-        final Optional<NeuronGraph> neuronPressed = state.getNeuronGraphList()
-                .stream()
-                .filter(neuronGraph -> neuronGraph.isOccupied(mouseEvent.getX(), mouseEvent.getY()))
-                .findFirst();
-
-        neuronPressed.ifPresent(state::setPressedNeuron);
+        buttonClickState.addMouseEvent(mouseEvent);
     }
 
     public void onMouseReleased(MouseEvent mouseEvent) {
-        final Optional<NeuronGraph> neuronReleased = state.getNeuronGraphList()
-                .stream()
-                .filter(neuronGraph -> neuronGraph.isOccupied(mouseEvent.getX(), mouseEvent.getY()))
-                .findFirst();
-        neuronReleased.ifPresent(neuronGraph -> {
-            state.setReleasedNeuron(neuronGraph);
-            if (state.getPressedNeuron() != null) {
-                addSynapse(state.getPressedNeuron(), neuronGraph);
-            }
-        });
+        buttonClickState.addMouseEvent(mouseEvent);
+    }
+
+    public void onMouseDragged(MouseEvent mouseEvent) {
+        buttonClickState.addMouseEvent(mouseEvent);
+    }
+
+    public void onKeyPressed(KeyEvent keyEvent) {
+        buttonClickState.addKey(keyEvent.getCode());
+    }
+
+    public void onKeyReleased(KeyEvent keyEvent) {
+        buttonClickState.removeKey(keyEvent.getCode());
+    }
+
+    @EventListener
+    public void LoadModelEventListener(LoadModelEvent event) {
+        updateNeuronsGraph();
+    }
+
+    @EventListener
+    public void updateCanvas(NeedUpdateCanvasEvent event) {
+        updateNeuronsGraph();
     }
 
     private void addSynapse(NeuronGraph from, NeuronGraph to) {
@@ -165,22 +140,31 @@ public class CanvasWindowController implements Initializable {
     }
 
     private void updateNeuronsGraph() {
+        double radius = NeuronGraph.RADIUS;
+
         GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
-        graphicsContext2D.rect(0, 0, canvas.getWidth(), canvas.getHeight());
         graphicsContext2D.setFill(Color.WHITE);
-        graphicsContext2D.fill();
+        graphicsContext2D.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
         for (NeuronGraph neuronGraph : state.getNeuronGraphList()) {
             graphicsContext2D.setFill(getColor(neuronGraph.getNeuronTypes()));
-            double radius = neuronGraph.getRadius();
             graphicsContext2D.fillOval(neuronGraph.getX() - radius, neuronGraph.getY() - radius, radius * 2, radius * 2);
-        }
 
-        for (NeuronGraph neuronGraph : state.getNeuronGraphList()) {
             for (String neuronId : neuronGraph.getInputConnect()) {
-                Optional<NeuronGraph> first = state.getNeuronGraphList().stream().filter(neuronGraph1 -> neuronGraph1.getId().equals(neuronId)).findFirst();
+                Optional<NeuronGraph> first = state.getNeuronGraphList()
+                        .stream()
+                        .filter(neuronGraph1 -> neuronGraph1.getId().equals(neuronId))
+                        .findFirst();
+
                 graphicsContext2D.strokeLine(first.get().getX(), first.get().getY(), neuronGraph.getX(), neuronGraph.getY());
             }
+        }
+
+        graphicsContext2D.setStroke(Color.GRAY);
+        graphicsContext2D.setLineDashes(6);
+        graphicsContext2D.setLineWidth(2);
+        for (NeuronGraph selectNeuron : state.getSelectNeurons()) {
+            graphicsContext2D.strokeOval(selectNeuron.getX() - radius, selectNeuron.getY() - radius, radius * 2, radius * 2);
         }
     }
 
@@ -195,13 +179,11 @@ public class CanvasWindowController implements Initializable {
             case OUTPUT -> {
                 return Color.GRAY;
             }
-            case default -> {
-                throw new RuntimeException("Неуказан тип");
-            }
+            case default -> throw new RuntimeException("Неуказан тип");
         }
     }
 
-    public void onContextSaveButtonMouseClick(ActionEvent mouseEvent) {
+    private void onContextSaveButtonMouseClick(ActionEvent mouseEvent) {
         canvasContextMenu.hide();
         try {
             int width = 480;
@@ -229,24 +211,9 @@ public class CanvasWindowController implements Initializable {
         }
     }
 
-    public void onContextLoadButtonMouseClick(ActionEvent mouseEvent) {
+    private void onContextLoadButtonMouseClick(ActionEvent mouseEvent) {
         canvasContextMenu.hide();
         applicationEventPublisher.publishEvent(new ShowModelLoadWindowEvent());
     }
 
-    @EventListener
-    public void LoadModelEventListener(LoadModelEvent event) {
-        updateNeuronsGraph();
-    }
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        MenuItem saveButton = new MenuItem("Сохранить");
-        saveButton.setOnAction(this::onContextSaveButtonMouseClick);
-
-        MenuItem loadButton = new MenuItem("Загрузить");
-        loadButton.setOnAction(this::onContextLoadButtonMouseClick);
-
-        canvasContextMenu.getItems().addAll(saveButton, loadButton);
-    }
 }

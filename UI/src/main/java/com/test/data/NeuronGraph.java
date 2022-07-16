@@ -8,22 +8,22 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class NeuronGraph {
     private static final AtomicLong counter = new AtomicLong(0);
+    public static final double RADIUS = 10;
 
     private final String id;
-    private final double x;
-    private final double y;
-    private final double radius;
+
+    private double x;
+    private double y;
 
     private final NeuronTypes neuronTypes;
     private final List<String> outputConnect;
     private final List<String> inputConnect;
     private long neuron;
 
-    public NeuronGraph(double x, double y, double radius, NeuronTypes neuronTypes) {
+    public NeuronGraph(double x, double y, NeuronTypes neuronTypes) {
         this.id = String.valueOf(counter.addAndGet(1L));
         this.x = x;
         this.y = y;
-        this.radius = radius;
         this.neuronTypes = neuronTypes;
         this.outputConnect = new ArrayList<>();
         this.inputConnect = new ArrayList<>();
@@ -34,19 +34,21 @@ public class NeuronGraph {
     }
 
     public boolean isOccupied(double x, double y) {
-        return x > (this.x - radius) && x < (this.x + radius) && y > (this.y - radius) && y < (this.y + radius);
+        return x > (this.x - RADIUS) && x < (this.x + RADIUS) && y > (this.y - RADIUS) && y < (this.y + RADIUS);
     }
 
     public double getX() {
         return x;
     }
+    public void setX(double x) {
+        this.x = x;
+    }
 
     public double getY() {
         return y;
     }
-
-    public double getRadius() {
-        return radius;
+    public void setY(double y) {
+        this.y = y;
     }
 
     public NeuronTypes getNeuronTypes() {
@@ -57,9 +59,8 @@ public class NeuronGraph {
         return neuron;
     }
 
-    public NeuronGraph setNeuron(long neuron) {
+    public void setNeuron(long neuron) {
         this.neuron = neuron;
-        return this;
     }
 
     public void addOutputNeuronGraph(String neuronId) {

@@ -1,6 +1,8 @@
 package com.test.configuration;
 
 import com.test.context.ApplicationContext;
+import com.test.context.ButtonClickState;
+import com.test.context.EventHandlerExecutor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -26,4 +28,10 @@ public class ContextConfiguration {
     public ApplicationContext.LoadWindowState loadWindowState(ApplicationContext applicationContext) {
         return applicationContext.new LoadWindowState();
     }
+
+    @Bean
+    public ButtonClickState buttonClickState(EventHandlerExecutor eventHandlerExecutor){
+        return new ButtonClickState(eventHandlerExecutor, 4);
+    }
+
 }

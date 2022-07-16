@@ -2,7 +2,6 @@ package com.test.UIControllers;
 
 import com.test.context.ApplicationContext;
 import com.test.data.NeuronGraph;
-import com.test.data.enums.ActionTypes;
 import com.test.enums.NeuronTypes;
 import com.test.services.VectorGeneratorService;
 import javafx.collections.FXCollections;
@@ -25,11 +24,8 @@ import java.util.ResourceBundle;
 @Component
 public class ManageWindowController implements Initializable {
     public ChoiceBox<String> choiceBox;
-    public Button addNeuron;
-    public Button removeNeuron;
     public Button testNN;
     public Button trainButton;
-    public Button view;
     public TextField currentError;
 
     private final ApplicationContext.ManageWindowState state;
@@ -39,14 +35,6 @@ public class ManageWindowController implements Initializable {
                                   VectorGeneratorService vectorGeneratorService) {
         this.state = state;
         this.vectorGeneratorService = vectorGeneratorService;
-    }
-
-    public void add(MouseEvent mouseEvent) {
-        state.setActionType(ActionTypes.ADD);
-    }
-
-    public void remove(MouseEvent mouseEvent) {
-        state.setActionType(ActionTypes.REMOVE);
     }
 
     public void test(MouseEvent mouseEvent) {

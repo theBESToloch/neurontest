@@ -5,10 +5,11 @@
 <?import javafx.scene.control.ScrollPane?>
 
 <ScrollPane fx:id="scrollPane" fitToHeight="true" fitToWidth="true" xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.test.UIControllers.CanvasWindowController">
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.test.UIControllers.CanvasWindowController"
+            onKeyPressed="#onKeyPressed" onKeyReleased="#onKeyReleased">
     <content>
-        <Canvas fx:id="canvas" onMouseClicked="#onMouseClick" onMousePressed="#onMousePressed"
-                onMouseReleased="#onMouseReleased"/>
+        <Canvas fx:id="canvas" onMousePressed="#onMousePressed"
+                onMouseReleased="#onMouseReleased" onMouseDragged="#onMouseDragged"/>
     </content>
     <contextMenu>
         <ContextMenu fx:id="canvasContextMenu"/>
