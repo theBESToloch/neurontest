@@ -5,9 +5,6 @@ import javafx.scene.input.MouseEvent;
 
 import java.util.Arrays;
 
-import static com.test.context.MouseEventCode.MOUSE_DRAGGED;
-import static com.test.context.MouseEventCode.MOUSE_MOVED;
-import static com.test.context.MouseEventCode.MOUSE_PRESSED;
 import static com.test.context.MouseEventCode.MOUSE_RELEASED;
 
 public class ButtonClickState {
@@ -92,26 +89,22 @@ public class ButtonClickState {
         switch (mouseEventCode) {
             case MOUSE_PRESSED -> {
                 if (mouseEventCodes[0] == null) {
-                    mouseEventCodes[0] = MOUSE_PRESSED;
+                    mouseEventCodes[0] = mouseEventCode;
                     isChanged = true;
                     mouseEvents[0] = mouseEvent;
                 }
             }
             case MOUSE_MOVED -> {
-                if (mouseEventCodes[1] == null) {
-                    mouseEventCodes[1] = MOUSE_MOVED;
+                    mouseEventCodes[1] = mouseEventCode;
                     isChanged = true;
-                }
             }
             case MOUSE_DRAGGED -> {
-                if (mouseEventCodes[2] == null) {
-                    mouseEventCodes[2] = MOUSE_DRAGGED;
+                    mouseEventCodes[2] = mouseEventCode;
                     isChanged = true;
-                }
             }
             case MOUSE_RELEASED -> {
                 if (mouseEventCodes[3] == null) {
-                    mouseEventCodes[3] = MOUSE_RELEASED;
+                    mouseEventCodes[3] = mouseEventCode;
                     isChanged = true;
                     mouseEvents[2] = mouseEvent;
                 }

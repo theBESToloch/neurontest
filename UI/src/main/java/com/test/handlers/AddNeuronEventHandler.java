@@ -6,6 +6,7 @@ import com.test.context.EventHandler;
 import com.test.data.NeuronGraph;
 import com.test.events.NeedUpdateCanvasEvent;
 import com.test.template.Neuron;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -32,6 +33,10 @@ public class AddNeuronEventHandler implements EventHandler {
     @Override
     public void handle(ButtonClickState buttonClickState) {
         MouseEvent mouseEvent = buttonClickState.getPressedMouseEvent();
+
+        if (mouseEvent.getButton() != MouseButton.PRIMARY) {
+            return;
+        }
 
         double x = mouseEvent.getX();
         double y = mouseEvent.getY();

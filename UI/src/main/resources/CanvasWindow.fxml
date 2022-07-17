@@ -11,7 +11,4 @@
         <Canvas fx:id="canvas" onMousePressed="#onMousePressed"
                 onMouseReleased="#onMouseReleased" onMouseDragged="#onMouseDragged"/>
     </content>
-    <contextMenu>
-        <ContextMenu fx:id="canvasContextMenu"/>
-    </contextMenu>
 </ScrollPane>
