@@ -1,8 +1,10 @@
 package com.test.UIControllers;
 
 import com.test.context.ApplicationContext;
+import com.test.data.NeuronGraph;
 import com.test.data.enums.ActionTypes;
 import com.test.enums.NeuronTypes;
+import com.test.services.VectorGeneratorService;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
@@ -17,7 +19,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.ResourceBundle;
 
 @Slf4j
@@ -32,9 +33,12 @@ public class ManageWindowController implements Initializable {
     public TextField currentError;
 
     private final ApplicationContext.ManageWindowState state;
+    private final VectorGeneratorService vectorGeneratorService;
 
-    public ManageWindowController(ApplicationContext.ManageWindowState state) {
+    public ManageWindowController(ApplicationContext.ManageWindowState state,
+                                  VectorGeneratorService vectorGeneratorService) {
         this.state = state;
+        this.vectorGeneratorService = vectorGeneratorService;
     }
 
     public void add(MouseEvent mouseEvent) {
@@ -45,13 +49,11 @@ public class ManageWindowController implements Initializable {
         state.setActionType(ActionTypes.REMOVE);
     }
 
-    public void onView(ActionEvent actionEvent) {
-        state.setActionType(ActionTypes.VIEW);
-    }
-
     public void test(MouseEvent mouseEvent) {
         currentError.setText("");
         double err = 0;
+        List<double[]> inputVectors = state.getInputVectors();
+        List<double[]> outputVectors = state.getOutputVectors();
         for (int i = 0; i < inputVectors.size(); i++) {
             double[] calculate = state.getNeuronFactory().calculate(inputVectors.get(i));
             double[] output = outputVectors.get(i);
@@ -64,41 +66,10 @@ public class ManageWindowController implements Initializable {
         currentError.setText(String.valueOf(Math.sqrt(err / inputVectors.size())));
     }
 
-    public static List<double[]> inputVectors = new ArrayList<>();
-    public static List<double[]> outputVectors = new ArrayList<>();
-
-    static {
-        int inputNeuron = 3;    // количество входных нейронов
-        int outputNeuron = 3;   // количество выходных нейронов
-        int count = 10;         // количество тестовых векторов
-
-        Random ran = new Random();
-
-        for (int i = 0; i < count; i++) {
-            inputVectors.add(getVector(inputNeuron, ran));
-            outputVectors.add(getOutputVector(outputNeuron, ran));
-        }
-        log.info("Сгенерировал вектора.");
-    }
-
-    private static double[] getOutputVector(int elementsCount, Random ran) {
-        double[] vector = new double[elementsCount];
-        for (int in = 0; in < elementsCount; in++) {
-            vector[in] = 0;
-        }
-        vector[ran.nextInt(elementsCount)] = 1;
-        return vector;
-    }
-
-    private static double[] getVector(int elementsCount, Random ran) {
-        double[] vector = new double[elementsCount];
-        for (int in = 0; in < elementsCount; in++) {
-            vector[in] = ran.nextInt(100);
-        }
-        return vector;
-    }
-
     public synchronized void onButtonTrainClick(ActionEvent actionEvent) {
+        checkVectors();
+        List<double[]> inputVectors = state.getInputVectors();
+        List<double[]> outputVectors = state.getOutputVectors();
         if (state.isTrainButton()) {
             state.setTrainButton(false);
             trainButton.setText("Остановить");
@@ -111,6 +82,35 @@ public class ManageWindowController implements Initializable {
             state.setTrainButton(true);
             trainButton.setText("Тренировать");
         }
+    }
+
+    private void checkVectors() {
+        List<double[]> inputVectors = state.getInputVectors();
+        List<double[]> outputVectors = state.getOutputVectors();
+
+        List<NeuronGraph> neuronGraphList = state.getNeuronGraphList();
+
+        if (inputVectors == null) {
+            log.info("Генерирую входные вектора");
+            long count = neuronGraphList.stream().filter(ng -> ng.getNeuronTypes() == NeuronTypes.INPUT).count();
+            if (count == 0) throw new IllegalArgumentException("zero inputs");
+            inputVectors = new ArrayList<>();
+            for (int i = 0; i < state.getCount(); i++) {
+                double[] vector = vectorGeneratorService.getVector((int) count);
+                inputVectors.add(vector);
+            }
+        }
+        if (outputVectors == null) {
+            log.info("Генерирую выходные вектора");
+            long count = neuronGraphList.stream().filter(ng -> ng.getNeuronTypes() == NeuronTypes.OUTPUT).count();
+            if (count == 0) throw new IllegalArgumentException("zero outputs");
+            outputVectors = new ArrayList<>();
+            for (int i = 0; i < state.getCount(); i++) {
+                double[] vector = vectorGeneratorService.getOutputVector((int) count);
+                outputVectors.add(vector);
+            }
+        }
+        state.setVectors(inputVectors, outputVectors);
     }
 
     @Override

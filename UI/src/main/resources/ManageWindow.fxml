@@ -13,7 +13,6 @@
         <Button fx:id="removeNeuron" layoutX="52.0" layoutY="100.0" mnemonicParsing="false" onMouseClicked="#remove" prefHeight="26.0" prefWidth="97.0" text="убрать" textAlignment="CENTER" />
         <Button fx:id="trainButton" layoutX="52.0" layoutY="130.0" mnemonicParsing="false" onAction="#onButtonTrainClick" prefHeight="26.0" prefWidth="97.0" text="Тренировать" />
         <Button fx:id="testNN" layoutX="52.0" layoutY="232.0" mnemonicParsing="false" onMouseClicked="#test" prefHeight="26.0" prefWidth="97.0" text="Тестировать" />
-        <Button fx:id="view" layoutX="52.0" layoutY="161.0" mnemonicParsing="false" onAction="#onView" prefHeight="26.0" prefWidth="97.0" text="Смотреть" />
         <Label layoutX="20.0" layoutY="264.0" text="Ошибка" />
         <TextField fx:id="currentError" disable="true" layoutX="20.0" layoutY="281.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" />
     </children>

@@ -23,12 +23,20 @@ public class NeuronFactory {
 
     public void train(int epox, List<double[]> inputs, List<double[]> output) {
         List<Neuron> hiddenNeurons = nn.getHiddenNeurons();
+        List<OutputNeuron> outputNeurons = nn.getOutputNeurons();
+
+        int hiddenNeuronSize = hiddenNeurons.size();
+        int outputNeuronSize = outputNeurons.size();
+
         double err = nnTrain.getErr();
         for (int i = 0; i < epox; i++) {
 
             //region правим веса
-            long neuronNumber = Math.round((hiddenNeurons.size() - 1) * Math.random());
-            Neuron neuron = hiddenNeurons.get((int) neuronNumber);
+            long neuronNumber = Math.round((hiddenNeuronSize + outputNeuronSize - 1) * Math.random());
+
+            Neuron neuron = neuronNumber < hiddenNeuronSize ?
+                    hiddenNeurons.get((int) neuronNumber) :
+                    outputNeurons.get((int) neuronNumber - hiddenNeuronSize);
 
             double[] dendrites = neuron.getDendrites();
             int dendriteNumber = (int) Math.round((dendrites.length - 1) * Math.random());
@@ -50,8 +58,10 @@ public class NeuronFactory {
     public void trainWithCondition(Predicate<Double> isEnd, List<double[]> inputs, List<double[]> output) {
         executorService.submit(() -> {
             try {
-                double err = calcError(inputs, output);
-                while (!isEnd.test(err)) train(100000, inputs, output);
+                nnTrain.setErr(calcError(inputs, output));
+                while (!isEnd.test(nnTrain.getErr())) {
+                    train(100000, inputs, output);
+                }
             } catch (Throwable th) {
                 log.error("Train err:", th);
             }
@@ -89,10 +99,11 @@ public class NeuronFactory {
             OutputNeuron outputNeuron = outputNeurons.get(j);
             int inputCount = outputNeuron.getInputCount();
             Neuron[] neuronInputNeurons = outputNeuron.getInputNeurons();
+            double[] neuronDendrites = outputNeuron.getDendrites();
 
             double output = 0;
             for (int i = 0; i < inputCount; i++) {
-                output += neuronInputNeurons[i].getAxon();
+                output += neuronInputNeurons[i].getAxon() * neuronDendrites[i];
             }
             outputs[j] = output;
         }
@@ -113,10 +124,9 @@ public class NeuronFactory {
     }
 
     public void removeNeuron(long neuron) {
-        Optional<Neuron> hiddenNeuron = nn.getHiddenNeurons().stream().filter(hidden-> hidden.getId() == neuron).findFirst();
-        Optional<InputNeuron> inputNeuron = nn.getInputNeurons().stream().filter(input-> input.getId() == neuron).findFirst();
-        Optional<OutputNeuron> outputNeuron = nn.getOutputNeurons().stream().filter(output-> output.getId() == neuron).findFirst();
-
+        Optional<Neuron> hiddenNeuron = nn.getHiddenNeurons().stream().filter(hidden -> hidden.getId() == neuron).findFirst();
+        Optional<InputNeuron> inputNeuron = nn.getInputNeurons().stream().filter(input -> input.getId() == neuron).findFirst();
+        Optional<OutputNeuron> outputNeuron = nn.getOutputNeurons().stream().filter(output -> output.getId() == neuron).findFirst();
 
 
         if (inputNeuron.isPresent()) {
@@ -126,7 +136,7 @@ public class NeuronFactory {
             nn.getOutputNeurons().remove(outputNeuron.get());
         } else if (hiddenNeuron.isPresent()) {
             nn.getHiddenNeurons().remove(hiddenNeuron.get());
-            nn.getHiddenNeurons().forEach(hidden-> hidden.removeInputNeuron(hiddenNeuron.get()));
+            nn.getHiddenNeurons().forEach(hidden -> hidden.removeInputNeuron(hiddenNeuron.get()));
         }
     }
 
@@ -198,13 +208,13 @@ public class NeuronFactory {
 
     private Neuron getNeuron(long neuronId) {
         Optional<InputNeuron> input = nn.getInputNeurons().stream().filter(n -> n.getId() == neuronId).findFirst();
-        if(input.isPresent()) return input.get();
+        if (input.isPresent()) return input.get();
 
         Optional<Neuron> hidden = nn.getHiddenNeurons().stream().filter(n -> n.getId() == neuronId).findFirst();
-        if(hidden.isPresent()) return hidden.get();
+        if (hidden.isPresent()) return hidden.get();
 
         Optional<OutputNeuron> output = nn.getOutputNeurons().stream().filter(n -> n.getId() == neuronId).findFirst();
-        if(output.isPresent()) return output.get();
+        if (output.isPresent()) return output.get();
 
         throw new RuntimeException("Нет такого нейрона");
     }

@@ -5,7 +5,6 @@ import com.test.data.NeuronGraph;
 import com.test.enums.NeuronTypes;
 import com.test.events.LoadModelEvent;
 import com.test.events.ShowModelLoadWindowEvent;
-import com.test.events.NeuronPropertiesViewEvent;
 import com.test.persistence.entities.NNPreview;
 import com.test.persistence.services.NNDescriptionService;
 import com.test.template.Neuron;
@@ -19,6 +18,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Scale;
@@ -57,6 +57,9 @@ public class CanvasWindowController implements Initializable {
     }
 
     public void onMouseClick(MouseEvent mouseEvent) {
+        if (mouseEvent.getButton() == MouseButton.SECONDARY) {
+            return;
+        }
         double layoutX = canvas.getLayoutX();
         double layoutY = canvas.getLayoutY();
 
@@ -71,8 +74,6 @@ public class CanvasWindowController implements Initializable {
                 .filter(neuronGraph -> neuronGraph.isOccupied(x1, y1))
                 .findFirst();
 
-        log.info("x: " + x1 + ", y: " + y1);
-
         double RADIUS = 10;
 
         if (first.isEmpty()) {
@@ -83,7 +84,7 @@ public class CanvasWindowController implements Initializable {
                     addedNeuron.setNeuron(neuron.getId());
                     addNeuronGraph(addedNeuron);
                 }
-                case REMOVE, VIEW -> {
+                case REMOVE -> {
                 }
             }
         }
@@ -94,10 +95,6 @@ public class CanvasWindowController implements Initializable {
                 case REMOVE -> {
                     NeuronGraph removedNeuron = first.get();
                     removeNeuronGraph(removedNeuron);
-                }
-                case VIEW -> {
-                    NeuronGraph viewNeuron = first.get();
-                    applicationEventPublisher.publishEvent(new NeuronPropertiesViewEvent(viewNeuron));
                 }
             }
         }
@@ -207,9 +204,16 @@ public class CanvasWindowController implements Initializable {
     public void onContextSaveButtonMouseClick(ActionEvent mouseEvent) {
         canvasContextMenu.hide();
         try {
-            WritableImage image = new WritableImage(480, 320);
+            int width = 480;
+            int height = 320;
+
+            double min = Math.min(480 / canvas.getWidth(), 320 / canvas.getHeight());
+
+            WritableImage image = new WritableImage(width, height);
+
             SnapshotParameters params = new SnapshotParameters();
-            params.setTransform(new Scale(480 / canvas.getWidth(), 320 / canvas.getHeight()));
+            params.setTransform(new Scale(min, min));
+
             canvas.snapshot(params, image);
 
             RenderedImage renderedImage = SwingFXUtils.fromFXImage(image, null);
@@ -231,7 +235,7 @@ public class CanvasWindowController implements Initializable {
     }
 
     @EventListener
-    public void LoadModelEventListener(LoadModelEvent event){
+    public void LoadModelEventListener(LoadModelEvent event) {
         updateNeuronsGraph();
     }
 
