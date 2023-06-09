@@ -8,15 +8,15 @@ import lombok.experimental.Accessors;
 import org.hibernate.annotations.Type;
 import org.springframework.context.annotation.Lazy;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Getter
@@ -43,7 +43,6 @@ public class NNPreview {
 
     @Lob
     @Column(name = "preview", columnDefinition = "bytea")
-    @Type(type = "org.hibernate.type.BinaryType")
     @Lazy
     private byte[] previewImage;
 

@@ -30,8 +30,8 @@ public class ContextConfiguration {
     }
 
     @Bean
-    public ButtonClickState buttonClickState(EventHandlerExecutor eventHandlerExecutor){
-        return new ButtonClickState(eventHandlerExecutor, 4);
+    public ButtonClickState buttonClickState(EventHandlerExecutor eventHandlerExecutor) {
+        return new ButtonClickState(eventHandlerExecutor,10);
     }
 
 }

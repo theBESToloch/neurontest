@@ -1,6 +1,5 @@
-package com.test.data;
+package com.test.common.data.dto;
 
-import com.test.enums.NeuronTypes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +32,9 @@ public class NeuronGraph {
         return id;
     }
 
-    public boolean isOccupied(double x, double y) {
-        return x > (this.x - RADIUS) && x < (this.x + RADIUS) && y > (this.y - RADIUS) && y < (this.y + RADIUS);
+    public boolean isOccupied(double x, double y, double multiplyer) {
+        double distance = RADIUS * multiplyer;
+        return x > (this.x - distance) && x < (this.x + distance) && y > (this.y - distance) && y < (this.y + distance);
     }
 
     public double getX() {

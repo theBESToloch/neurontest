@@ -1,5 +1,8 @@
 package com.test.UIControllers;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.test.common.data.dto.NeuronGraph;
 import com.test.context.ApplicationContext;
 import com.test.events.LoadModelEvent;
 import com.test.events.ShowModelLoadWindowEvent;
@@ -19,6 +22,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
@@ -29,10 +34,12 @@ import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class LoadWindowController implements Initializable {
 
     @FXML
@@ -44,14 +51,7 @@ public class LoadWindowController implements Initializable {
     private final NNPreviewService nnPreviewService;
     private final ApplicationContext.LoadWindowState loadWindowState;
     private final ApplicationEventPublisher applicationEventPublisher;
-
-    public LoadWindowController(NNPreviewService nnPreviewService,
-                                ApplicationContext.LoadWindowState loadWindowState,
-                                ApplicationEventPublisher applicationEventPublisher) {
-        this.nnPreviewService = nnPreviewService;
-        this.loadWindowState = loadWindowState;
-        this.applicationEventPublisher = applicationEventPublisher;
-    }
+    private final ObjectMapper objectMapper;
 
     @EventListener
     public void show(ShowModelLoadWindowEvent event) {
@@ -111,12 +111,15 @@ public class LoadWindowController implements Initializable {
         contextMenu.getItems().addAll(openButton, deleteButton);
     }
 
+    @SneakyThrows
     private void onContextOpenButtonMouseClick(ActionEvent actionEvent) {
         contextMenu.hide();
         NNPreview selectedItem = listView.getSelectionModel().getSelectedItem();
         splitPane.getScene().getWindow().hide();
 
-        loadWindowState.setNeuronGraphList(selectedItem.getNnDescription().getStruct());
+
+        loadWindowState.setNeuronGraphList(objectMapper.readValue(selectedItem.getNnDescription().getStruct(),
+                new TypeReference<>() {}));
         applicationEventPublisher.publishEvent(new LoadModelEvent());
     }
 

@@ -1,124 +1,29 @@
 package com.test.context;
 
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.MouseEvent;
-
-import java.util.Arrays;
-
-import static com.test.context.MouseEventCode.MOUSE_RELEASED;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class ButtonClickState {
 
     private final EventHandlerExecutor eventHandlerExecutor;
 
-    private final int MAX_COUNT;
-    private final KeyCode[] keyPressedCodes;
-    private volatile int pressedButtonCount = 0;
+    private final Queue<EventDescriptor> eventQueue;
 
-    public ButtonClickState(EventHandlerExecutor eventHandlerExecutor, int maxCountButtonPressed) {
+    public ButtonClickState(EventHandlerExecutor eventHandlerExecutor, int maxEventQueueElement) {
         this.eventHandlerExecutor = eventHandlerExecutor;
-        MAX_COUNT = maxCountButtonPressed;
-        //+1 только для этапа удаления нажатой кнопки, т.к. удаляется по одной кнопке и последний элемент
-        // нужен null для очистки
-        keyPressedCodes = new KeyCode[maxCountButtonPressed + 1];
-
-        mouseEventCodes = new MouseEventCode[4];
-        mouseEvents = new MouseEvent[3];
-    }
-
-    public synchronized boolean addKey(KeyCode pressedButton) {
-        if (pressedButtonCount == MAX_COUNT) {
-            return false;
-        }
-        int i = 0;
-        while (i < pressedButtonCount && keyPressedCodes[i] != pressedButton) {
-            i++;
-        }
-        if (i != pressedButtonCount) {
-            return false;
-        }
-        keyPressedCodes[pressedButtonCount++] = pressedButton;
-
-        eventHandlerExecutor.executeIfApproach(keyPressedCodes, mouseEventCodes, this);
-        return true;
-    }
-
-    public synchronized boolean removeKey(KeyCode releasedButton) {
-        int i = 0;
-        while (i < pressedButtonCount && keyPressedCodes[i] != releasedButton) {
-            i++;
-        }
-
-        if (i == pressedButtonCount) {
-            return false;
-        }
-
-        for (; i < pressedButtonCount; i++) {
-            keyPressedCodes[i] = keyPressedCodes[i + 1];
-        }
-        pressedButtonCount--;
-
-        return true;
-    }
-
-    public KeyCode[] getKeyPressedCodes() {
-        return keyPressedCodes;
-    }
-
-    private final MouseEventCode[] mouseEventCodes;
-
-    private final MouseEvent[] mouseEvents;
-    public MouseEvent getPressedMouseEvent() {
-        return mouseEvents[0];
-    }
-
-    public MouseEvent getCurrentMouseEvent() {
-        return mouseEvents[1];
-    }
-
-    public MouseEvent getReleasedMouseEvent() {
-        return mouseEvents[2];
-    }
-
-    public boolean addMouseEvent(MouseEvent mouseEvent) {
-        mouseEvents[1] = mouseEvent;
-
-        MouseEventCode mouseEventCode = MouseEventCode.valueOf(mouseEvent.getEventType().getName());
-
-        boolean isChanged = false;
-        switch (mouseEventCode) {
-            case MOUSE_PRESSED -> {
-                if (mouseEventCodes[0] == null) {
-                    mouseEventCodes[0] = mouseEventCode;
-                    isChanged = true;
-                    mouseEvents[0] = mouseEvent;
+        eventQueue = new LinkedList<>() {
+            @Override
+            public boolean add(EventDescriptor eventDescriptor) {
+                if (this.size() == maxEventQueueElement) {
+                    this.remove();
                 }
+                return super.add(eventDescriptor);
             }
-            case MOUSE_MOVED -> {
-                    mouseEventCodes[1] = mouseEventCode;
-                    isChanged = true;
-            }
-            case MOUSE_DRAGGED -> {
-                    mouseEventCodes[2] = mouseEventCode;
-                    isChanged = true;
-            }
-            case MOUSE_RELEASED -> {
-                if (mouseEventCodes[3] == null) {
-                    mouseEventCodes[3] = mouseEventCode;
-                    isChanged = true;
-                    mouseEvents[2] = mouseEvent;
-                }
-            }
-        }
-
-        if (isChanged) {
-            eventHandlerExecutor.executeIfApproach(keyPressedCodes, mouseEventCodes, this);
-        }
-        if (mouseEventCode == MOUSE_RELEASED) {
-            Arrays.fill(mouseEventCodes, null);
-            Arrays.fill(mouseEvents, null);
-        }
-        return isChanged;
+        };
     }
 
+    public void addEvent(EventDescriptor eventDescriptor) {
+        eventQueue.add(eventDescriptor);
+        eventHandlerExecutor.execute(eventDescriptor, eventQueue);
+    }
 }

@@ -2,7 +2,8 @@ package com.test.handlers;
 
 import com.test.context.ApplicationContext;
 import com.test.context.ButtonClickState;
-import com.test.context.EventHandler;
+import com.test.context.EventDescriptor;
+import com.test.context.EventQueueHandler;
 import com.test.events.ShowModelLoadWindowEvent;
 import com.test.persistence.entities.NNPreview;
 import com.test.persistence.services.NNDescriptionService;
@@ -25,10 +26,11 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Queue;
 
 @Slf4j
 @Component
-public class CanvasContextMenuNeuronEventHandler implements EventHandler {
+public class CanvasContextMenuNeuronEventHandler implements EventQueueHandler {
     public static final String CANVAS_CONTEXT_MENU_NEURON_CODE = "canvasContextMenuNeuron";
     private final ApplicationContext.CanvasWindowState state;
     private final ApplicationEventPublisher applicationEventPublisher;
@@ -60,8 +62,12 @@ public class CanvasContextMenuNeuronEventHandler implements EventHandler {
     }
 
     @Override
-    public void handle(ButtonClickState buttonClickState) {
-        MouseEvent releasedMouseEvent = buttonClickState.getReleasedMouseEvent();
+    public void handle(EventDescriptor lastEvent, Queue<EventDescriptor> eventQueue) {
+        if (!isTriggered(lastEvent, eventQueue)) {
+            return;
+        }
+
+        MouseEvent releasedMouseEvent = pressedMouseEvent;
         if (releasedMouseEvent.getButton() == MouseButton.SECONDARY) {
             canvasContextMenu.show(canvas, releasedMouseEvent.getScreenX(), releasedMouseEvent.getScreenY());
         } else if (canvasContextMenu.isShowing()) {
@@ -102,7 +108,12 @@ public class CanvasContextMenuNeuronEventHandler implements EventHandler {
         applicationEventPublisher.publishEvent(new ShowModelLoadWindowEvent());
     }
 
-    public void setCanvas(Canvas canvas) {
-        this.canvas = canvas;
+    private MouseEvent pressedMouseEvent;
+
+    private boolean isTriggered(EventDescriptor lastEvent, Queue<EventDescriptor> eventQueue) {
+        EventDescriptor.EventType eventType = lastEvent.getEventType();
+
+        return false;
     }
+
 }

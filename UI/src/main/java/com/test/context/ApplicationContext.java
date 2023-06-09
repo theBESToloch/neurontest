@@ -1,15 +1,17 @@
 package com.test.context;
 
 import com.test.NeuronFactory;
-import com.test.data.NeuronGraph;
-import com.test.enums.NeuronTypes;
+import com.test.common.data.dto.NeuronGraph;
+import com.test.common.data.dto.NeuronTypes;
 import com.test.template.NN;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -29,17 +31,17 @@ public class ApplicationContext {
     private NeuronTypes neuronType;
     private volatile boolean isTrainButton = true;
 
+    @Getter
+    @Setter
     public class CanvasWindowState {
 
-        private final List<NeuronGraph> selectNeurons = new ArrayList<>();
+        private double scale = 1;
+        private double xOffset = 0;
+        private double yOffset = 0;
 
-        public void addSelectNeuron(NeuronGraph selectNeuron) {
-            this.selectNeurons.add(selectNeuron);
-        }
+        private double[] firstSelectNeuronCoordinate = null;
 
-        public List<NeuronGraph> getSelectNeurons() {
-            return selectNeurons;
-        }
+        private final Set<NeuronGraph> selectNeurons = new HashSet<>();
 
         public void cleanSelectNeurons(){
             selectNeurons.clear();

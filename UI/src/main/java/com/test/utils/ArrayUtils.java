@@ -4,7 +4,6 @@ import lombok.NonNull;
 
 public class ArrayUtils {
 
-
     public static <T> boolean containRef(@NonNull T[] array, @NonNull T element) {
         for (T t : array) {
             if (t == element) {

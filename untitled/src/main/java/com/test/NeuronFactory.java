@@ -1,7 +1,12 @@
 package com.test;
 
-import com.test.enums.NeuronTypes;
-import com.test.template.*;
+import com.test.common.data.dto.NeuronTypes;
+import com.test.template.InputNeuron;
+import com.test.template.Layer;
+import com.test.template.NN;
+import com.test.template.NNTrain;
+import com.test.template.Neuron;
+import com.test.template.OutputNeuron;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;

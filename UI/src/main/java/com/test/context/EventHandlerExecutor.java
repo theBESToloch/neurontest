@@ -1,8 +1,9 @@
 package com.test.context;
 
-import javafx.scene.input.KeyCode;
+
+import java.util.Queue;
 
 public interface EventHandlerExecutor {
 
-    void executeIfApproach(KeyCode[] keys, MouseEventCode[] mouseKeys, ButtonClickState buttonClickState);
+    void execute(EventDescriptor lastEvent, Queue<EventDescriptor> eventQueue);
 }

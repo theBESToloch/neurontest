@@ -1,17 +1,21 @@
 package com.test.handlers;
 
+import com.test.common.data.dto.NeuronGraph;
 import com.test.context.ApplicationContext;
-import com.test.context.ButtonClickState;
-import com.test.context.EventHandler;
-import com.test.data.NeuronGraph;
+import com.test.context.EventDescriptor;
+import com.test.context.EventQueueHandler;
 import com.test.events.NeedUpdateCanvasEvent;
+import javafx.scene.input.KeyEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.Queue;
+import java.util.Set;
+
+import static javafx.scene.input.KeyCode.DELETE;
 
 @Component
-public class RemoveNeuronEventHandler implements EventHandler {
+public class RemoveNeuronEventHandler implements EventQueueHandler {
     public static final String REMOVE_NEURON_CODE = "removeNeuronCode";
     private final ApplicationContext.CanvasWindowState state;
     private final ApplicationEventPublisher applicationEventPublisher;
@@ -28,8 +32,13 @@ public class RemoveNeuronEventHandler implements EventHandler {
     }
 
     @Override
-    public void handle(ButtonClickState buttonClickState) {
-        List<NeuronGraph> neuronGraphs = state.getSelectNeurons();
+    public void handle(EventDescriptor lastEvent, Queue<EventDescriptor> eventQueue) {
+        Set<NeuronGraph> neuronGraphs;
+
+        if ((neuronGraphs = state.getSelectNeurons()).isEmpty()
+                || !isTriggered(lastEvent, eventQueue)) {
+            return;
+        }
 
         for (NeuronGraph neuronGraph : neuronGraphs) {
             for (String graphId : neuronGraph.getInputConnect()) {
@@ -59,7 +68,20 @@ public class RemoveNeuronEventHandler implements EventHandler {
 
         state.cleanSelectNeurons();
 
-        applicationEventPublisher.publishEvent(new NeedUpdateCanvasEvent());
+        applicationEventPublisher.publishEvent(NeedUpdateCanvasEvent.INSTANT);
+    }
 
+    private boolean isTriggered(EventDescriptor lastEvent, Queue<EventDescriptor> eventQueue) {
+        EventDescriptor.EventType eventType = lastEvent.getEventType();
+
+        switch (eventType) {
+            case BUTTON_PRESSED -> {
+                KeyEvent asKeyEvent = lastEvent.getAsKeyEvent();
+                if (asKeyEvent.getCode() == DELETE) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

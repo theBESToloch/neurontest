@@ -3,15 +3,20 @@ package com.test;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Background;
 import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 
@@ -21,29 +26,15 @@ public class FxApp extends Application {
 
     @Override
     public void start(Stage canvasStage) {
-
-        ScrollPane scrollPane = load(getClass().getResource("/CanvasWindow.fxml"));
-        Scene scene = new Scene(scrollPane, 480, 320);
+        AnchorPane anchorPane = load(getClass().getResource("/CanvasWindow.fxml"));
+        Scene scene = new Scene(anchorPane);
         canvasStage.setScene(scene);
+        anchorPane.getStyleClass().add("black-theme");
 
-        Canvas canvas = (Canvas) scrollPane.getContent();
-        canvas.setWidth(scrollPane.getWidth());
-        scrollPane.widthProperty().addListener(((observable, oldValue, newValue) -> canvas.setWidth((Double) newValue)));
-        canvas.setHeight(scrollPane.getHeight());
-        scrollPane.heightProperty().addListener(((observable, oldValue, newValue) -> canvas.setHeight((Double) newValue)));
-
-        Stage manageStage = new Stage();
-        manageStage.initOwner(canvasStage);
-
-        AnchorPane manage = load(getClass().getResource("/ManageWindow.fxml"));
-        Scene manageScene = new Scene(manage, 200, 320);
-        manageStage.setScene(manageScene);
-
-        canvasStage.setOnShown((window) -> {
-            Stage source = (Stage) window.getSource();
-            manageStage.setX(source.getX() - manageScene.getWidth());
-            manageStage.setY(source.getY());
-        });
+        AnchorPane childAnchorPane = (AnchorPane)anchorPane.getChildren().get(0);
+        Canvas canvas = (Canvas) childAnchorPane.getChildren().get(0);
+        childAnchorPane.widthProperty().addListener(((observable, oldValue, newValue) -> canvas.setWidth((Double) newValue)));
+        childAnchorPane.heightProperty().addListener(((observable, oldValue, newValue) -> canvas.setHeight((Double) newValue)));
 
         Stage loadStage = new Stage();
         loadStage.initOwner(canvasStage);
@@ -53,7 +44,6 @@ public class FxApp extends Application {
         loadStage.setScene(loadScene);
 
         canvasStage.show();
-        manageStage.show();
     }
 
     public <T> T load(URL resource) {
