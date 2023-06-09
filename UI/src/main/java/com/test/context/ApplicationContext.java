@@ -1,16 +1,17 @@
 package com.test.context;
 
 import com.test.NeuronFactory;
-import com.test.data.NeuronGraph;
-import com.test.data.enums.ActionTypes;
-import com.test.enums.NeuronTypes;
+import com.test.common.data.dto.NeuronGraph;
+import com.test.common.data.dto.NeuronTypes;
 import com.test.template.NN;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -24,32 +25,26 @@ public class ApplicationContext {
     public ApplicationContext() {
         neuronFactory = new NeuronFactory(new NN());
         neuronGraphList = new ArrayList<>();
-        neuronType  = NeuronTypes.HIDDEN;
-        actionType  = ActionTypes.ADD;
+        neuronType = NeuronTypes.HIDDEN;
     }
 
-    private ActionTypes actionType;
     private NeuronTypes neuronType;
     private volatile boolean isTrainButton = true;
 
+    @Getter
+    @Setter
     public class CanvasWindowState {
-        private NeuronGraph pressedNeuron;
-        private NeuronGraph releasedNeuron;
 
-        public NeuronGraph getPressedNeuron() {
-            return pressedNeuron;
-        }
+        private double scale = 1;
+        private double xOffset = 0;
+        private double yOffset = 0;
 
-        public void setPressedNeuron(NeuronGraph pressedNeuron) {
-            this.pressedNeuron = pressedNeuron;
-        }
+        private double[] firstSelectNeuronCoordinate = null;
 
-        public NeuronGraph getReleasedNeuron() {
-            return releasedNeuron;
-        }
+        private final Set<NeuronGraph> selectNeurons = new HashSet<>();
 
-        public void setReleasedNeuron(NeuronGraph releasedNeuron) {
-            this.releasedNeuron = releasedNeuron;
+        public void cleanSelectNeurons(){
+            selectNeurons.clear();
         }
 
         public NeuronFactory getNeuronFactory() {
@@ -60,10 +55,6 @@ public class ApplicationContext {
             return neuronGraphList;
         }
 
-        public ActionTypes getActionType() {
-            return actionType;
-        }
-
         public NeuronTypes getNeuronType() {
             return neuronType;
         }
@@ -71,11 +62,11 @@ public class ApplicationContext {
 
     public class ManageWindowState {
 
-        private int count = 20;
+        private static final int count = 20;
         private List<double[]> inputVectors;
         private List<double[]> outputVectors;
 
-        public void setVectors(List<double[]> inputVectors, List<double[]> outputVectors){
+        public void setVectors(List<double[]> inputVectors, List<double[]> outputVectors) {
             this.inputVectors = inputVectors;
             this.outputVectors = outputVectors;
         }
@@ -87,10 +78,6 @@ public class ApplicationContext {
 
         public NeuronFactory getNeuronFactory() {
             return neuronFactory;
-        }
-
-        public void setActionType(ActionTypes actionType) {
-            ApplicationContext.this.actionType = actionType;
         }
 
         public void setNeuronType(NeuronTypes neuronType) {
@@ -118,8 +105,8 @@ public class ApplicationContext {
         }
     }
 
-    public class LoadWindowState{
-        public void setNeuronGraphList(List<NeuronGraph> neuronGraphList){
+    public class LoadWindowState {
+        public void setNeuronGraphList(List<NeuronGraph> neuronGraphList) {
             ApplicationContext.this.neuronGraphList = neuronGraphList;
         }
     }

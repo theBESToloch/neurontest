@@ -1,0 +1,4 @@
+.black-theme .transparent-grid {
+    -fx-background-color: rgba(40, 40, 40, 0.35);
+    background-color: rgba(40, 40, 40, 0.35);
+}
