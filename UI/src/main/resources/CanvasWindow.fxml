@@ -1,10 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.net.URL?>
 <?import javafx.scene.canvas.Canvas?>
-<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
 
-<ScrollPane fx:id="scrollPane" fitToHeight="true" fitToWidth="true" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.test.UIControllers.CanvasWindowController">
-    <content>
-        <Canvas fx:id="canvas" onMouseClicked="#onMouseClick" onMousePressed="#onMousePressed" onMouseReleased="#onMouseReleased" />
-    </content>
-</ScrollPane>
+<AnchorPane minHeight="360.0" minWidth="480.0" onKeyPressed="#onKeyPressed" onKeyReleased="#onKeyReleased" prefHeight="360.0" prefWidth="680.0" styleClass="black-theme" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.test.UIControllers.CanvasWindowController">
+   <children>
+      <AnchorPane minHeight="360.0" minWidth="480.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+              <Canvas fx:id="canvas" height="360.0" onMouseDragged="#onMouseDragged" onMouseMoved="#onMouseMoved" onMousePressed="#onMousePressed" onMouseReleased="#onMouseReleased" onScroll="#onScroll" width="680.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+             <AnchorPane prefHeight="360.0" prefWidth="200.0" styleClass="transparent-grid" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                 <children>
+                     <ChoiceBox fx:id="choiceBox" layoutX="25.0" layoutY="27.0" prefWidth="150.0" />
+                     <Button fx:id="trainButton" layoutX="52.0" layoutY="66.0" mnemonicParsing="false" onAction="#onButtonTrainClick" prefHeight="26.0" prefWidth="97.0" text="Тренировать" />
+                     <Button fx:id="testNN" layoutX="52.0" layoutY="232.0" mnemonicParsing="false" onMouseClicked="#test" prefHeight="26.0" prefWidth="97.0" text="Тестировать" />
+                     <Label layoutX="20.0" layoutY="264.0" text="Ошибка" />
+                     <TextField fx:id="currentError" disable="true" layoutX="20.0" layoutY="281.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" />
+                 </children>
+             </AnchorPane>
+         </children>
+      </AnchorPane>
+   </children>
+   <stylesheets>
+      <URL value="@additional.style.css" />
+      <URL value="@style.css" />
+   </stylesheets>
+</AnchorPane>
