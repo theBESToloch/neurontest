@@ -1,111 +1,115 @@
-package com.test.handlers;
+package com.test.handler.event;
 
 import com.test.common.data.dto.NeuronGraph;
 import com.test.context.ApplicationContext;
 import com.test.context.EventDescriptor;
 import com.test.context.EventQueueHandler;
-import com.test.events.NeedUpdateCanvasEvent;
+import com.test.event.NeedUpdateCanvasEvent;
+import com.test.template.Neuron;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.Queue;
-import java.util.Set;
 
-import static javafx.scene.input.KeyCode.ALT;
+import static javafx.scene.input.KeyCode.SHIFT;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class NeuronMoveEventHandler implements EventQueueHandler {
-    public static final String NEURON_MOVE_CODE = "neuronMove";
+public class AddNeuronEventHandler implements EventQueueHandler {
+    public static final String ADD_NEURON_CODE = "addNeuron";
     private final ApplicationContext.CanvasWindowState state;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    private MouseEvent preventMouseEvent = null;
+    public AddNeuronEventHandler(ApplicationContext.CanvasWindowState state,
+                                 ApplicationEventPublisher applicationEventPublisher) {
+        this.state = state;
+        this.applicationEventPublisher = applicationEventPublisher;
+    }
 
     @Override
     public String getCode() {
-        return NEURON_MOVE_CODE;
+        return ADD_NEURON_CODE;
     }
 
     @Override
     public void handle(EventDescriptor lastEvent, Queue<EventDescriptor> eventQueue) {
-        Set<NeuronGraph> pressedNeurons;
-
-        if ((pressedNeurons = state.getSelectNeurons()).isEmpty()
-                || !isTriggered(lastEvent, eventQueue)) {
+        if (!isTriggered(lastEvent, eventQueue)) {
             return;
         }
 
-        MouseEvent currentMouseEvent = lastEvent.getAsMouseEvent();
+        double x = pressedMouseEvent.getX();
+        double y = pressedMouseEvent.getY();
 
-        double delX = currentMouseEvent.getX() - preventMouseEvent.getX();
-        double delY = currentMouseEvent.getY() - preventMouseEvent.getY();
+        double scale = state.getScale();
+        double xOffset = state.getXOffset();
+        double yOffset = state.getYOffset();
 
-        for (NeuronGraph pressedNeuron : pressedNeurons) {
-            pressedNeuron.setX(pressedNeuron.getX() + delX);
-            pressedNeuron.setY(pressedNeuron.getY() + delY);
+        double targetX = (x - xOffset) / scale;
+        double targetY = (y - yOffset) / scale;
+
+        final Optional<NeuronGraph> neuronPressed = state.getNeuronGraphList()
+                .stream()
+                .filter(neuronGraph -> neuronGraph.isOccupied(targetX, targetY, 4))
+                .findFirst();
+
+        if (neuronPressed.isEmpty()) {
+            Neuron neuron = state.getNeuronFactory().createNeuron(state.getNeuronType());
+
+            NeuronGraph addedNeuron = new NeuronGraph(targetX, targetY, state.getNeuronType());
+            addedNeuron.setNeuron(neuron.getId());
+
+            state.getNeuronGraphList().add(addedNeuron);
+
+            applicationEventPublisher.publishEvent(NeedUpdateCanvasEvent.INSTANT);
         }
-
-        preventMouseEvent = currentMouseEvent;
-        applicationEventPublisher.publishEvent(NeedUpdateCanvasEvent.INSTANT);
 
     }
 
-    private KeyEvent altButtonPressedEvent;
+    private KeyEvent shiftButtonPressedEvent;
     private MouseEvent pressedMouseEvent;
-
 
     private boolean isTriggered(EventDescriptor lastEvent, Queue<EventDescriptor> eventQueue) {
         EventDescriptor.EventType eventType = lastEvent.getEventType();
 
-        switch (eventType){
-
+        switch (eventType) {
             case BUTTON_PRESSED -> {
-                if (altButtonPressedEvent != null) {
+                if (shiftButtonPressedEvent != null) {
                     return false;
                 }
                 KeyEvent asKeyEvent = lastEvent.getAsKeyEvent();
-                if (asKeyEvent.getCode() == ALT) {
-                    altButtonPressedEvent = asKeyEvent;
+                if (asKeyEvent.getCode() == SHIFT) {
+                    shiftButtonPressedEvent = asKeyEvent;
                     return false;
                 }
             }
             case BUTTON_RELEASED -> {
-                if (altButtonPressedEvent == null) {
+                if (shiftButtonPressedEvent == null) {
                     return false;
                 }
                 KeyEvent asKeyEvent = lastEvent.getAsKeyEvent();
-                if (asKeyEvent.getCode() == ALT) {
-                    altButtonPressedEvent = null;
+                if (asKeyEvent.getCode() == SHIFT) {
+                    shiftButtonPressedEvent = null;
                     pressedMouseEvent = null;
                 }
                 return false;
             }
             case MOUSE_PRESSED -> {
-                if (altButtonPressedEvent == null) {
+                if (shiftButtonPressedEvent == null) {
                     return false;
                 }
                 MouseEvent asMouseEvent = lastEvent.getAsMouseEvent();
                 if (asMouseEvent.getButton() == MouseButton.PRIMARY) {
                     pressedMouseEvent = asMouseEvent;
-                    preventMouseEvent = asMouseEvent;
                     return true;
                 }
             }
-            case MOUSE_DRAGGED -> {
-                if (altButtonPressedEvent == null || pressedMouseEvent == null) {
-                    return false;
-                }
-                return true;
-            }
             case MOUSE_RELEASED -> {
-                if (altButtonPressedEvent == null) {
+                if (shiftButtonPressedEvent == null) {
                     return false;
                 }
                 MouseEvent asMouseEvent = lastEvent.getAsMouseEvent();
