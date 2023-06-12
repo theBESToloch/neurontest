@@ -7,8 +7,8 @@ import com.test.context.ButtonClickState;
 import com.test.context.EventDescriptor;
 import com.test.context.EventHandlerRegistrar;
 import com.test.context.EventQueueHandler;
-import com.test.events.LoadModelEvent;
-import com.test.events.NeedUpdateCanvasEvent;
+import com.test.event.LoadModelEvent;
+import com.test.event.NeedUpdateCanvasEvent;
 import com.test.services.VectorGeneratorService;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -18,6 +18,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
+import javafx.scene.input.InputEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -37,13 +38,13 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-import static com.test.handlers.AddNeuronEventHandler.ADD_NEURON_CODE;
-import static com.test.handlers.AddSynapseEventHandler.ADD_SYNAPSE_CODE;
-import static com.test.handlers.CanvasOffsetEventHandler.OFFSET_CODE;
-import static com.test.handlers.CanvasScaleEventHandler.SCALE_CODE;
-import static com.test.handlers.NeuronMoveEventHandler.NEURON_MOVE_CODE;
-import static com.test.handlers.RemoveNeuronEventHandler.REMOVE_NEURON_CODE;
-import static com.test.handlers.SelectNeuronEventHandler.SELECT_NEURON_CODE;
+import static com.test.handler.event.AddNeuronEventHandler.ADD_NEURON_CODE;
+import static com.test.handler.event.AddSynapseEventHandler.ADD_SYNAPSE_CODE;
+import static com.test.handler.event.CanvasOffsetEventHandler.OFFSET_CODE;
+import static com.test.handler.event.CanvasScaleEventHandler.SCALE_CODE;
+import static com.test.handler.event.NeuronMoveEventHandler.NEURON_MOVE_CODE;
+import static com.test.handler.event.RemoveNeuronEventHandler.REMOVE_NEURON_CODE;
+import static com.test.handler.event.SelectNeuronEventHandler.SELECT_NEURON_CODE;
 
 @Slf4j
 @Component
@@ -64,6 +65,9 @@ public class CanvasWindowController implements Initializable {
     private final ButtonClickState buttonClickState;
     private final EventHandlerRegistrar eventHandlerRegistrar;
     private final VectorGeneratorService vectorGeneratorService;
+
+
+    private boolean needUpdate = false;
 
     @Qualifier("eventQueueHandler")
     private final Map<String, EventQueueHandler> eventQueueHandler;
@@ -91,33 +95,40 @@ public class CanvasWindowController implements Initializable {
         eventHandlerRegistrar.register(eventQueueHandler.get(OFFSET_CODE));
     }
 
-    public void onMousePressed(MouseEvent mouseEvent) {
-        buttonClickState.addEvent(new EventDescriptor(EventDescriptor.EventType.MOUSE_PRESSED, mouseEvent));
+    public void onMousePressed(MouseEvent event) {
+        handleEvent(EventDescriptor.EventType.MOUSE_PRESSED, event);
     }
 
-    public void onMouseReleased(MouseEvent mouseEvent) {
-        buttonClickState.addEvent(new EventDescriptor(EventDescriptor.EventType.MOUSE_RELEASED, mouseEvent));
+    public void onMouseReleased(MouseEvent event) {
+        handleEvent(EventDescriptor.EventType.MOUSE_RELEASED, event);
     }
 
-    public void onMouseDragged(MouseEvent mouseEvent) {
-        buttonClickState.addEvent(new EventDescriptor(EventDescriptor.EventType.MOUSE_DRAGGED, mouseEvent));
-
+    public void onMouseDragged(MouseEvent event) {
+        handleEvent(EventDescriptor.EventType.MOUSE_DRAGGED, event);
     }
 
-    public void onMouseMoved(MouseEvent mouseEvent) {
-        buttonClickState.addEvent(new EventDescriptor(EventDescriptor.EventType.MOUSE_MOVED, mouseEvent));
+    public void onMouseMoved(MouseEvent event) {
+        handleEvent(EventDescriptor.EventType.MOUSE_MOVED, event);
     }
 
-    public void onScroll(ScrollEvent scrollEvent) {
-        buttonClickState.addEvent(new EventDescriptor(EventDescriptor.EventType.MOUSE_SCROLL, scrollEvent));
+    public void onScroll(ScrollEvent event) {
+        handleEvent(EventDescriptor.EventType.MOUSE_SCROLL, event);
     }
 
-    public void onKeyPressed(KeyEvent keyEvent) {
-        buttonClickState.addEvent(new EventDescriptor(EventDescriptor.EventType.BUTTON_PRESSED, keyEvent));
+    public void onKeyPressed(KeyEvent event) {
+        handleEvent(EventDescriptor.EventType.BUTTON_PRESSED, event);
     }
 
-    public void onKeyReleased(KeyEvent keyEvent) {
-        buttonClickState.addEvent(new EventDescriptor(EventDescriptor.EventType.BUTTON_RELEASED, keyEvent));
+    public void onKeyReleased(KeyEvent event) {
+        handleEvent(EventDescriptor.EventType.BUTTON_RELEASED, event);
+    }
+
+    private void handleEvent(EventDescriptor.EventType eventType, InputEvent event) {
+        needUpdate = false;
+        buttonClickState.addEvent(new EventDescriptor(eventType, event));
+        if (needUpdate) {
+            updateNeuronsGraph();
+        }
     }
 
     @EventListener
@@ -127,7 +138,7 @@ public class CanvasWindowController implements Initializable {
 
     @EventListener
     public void updateCanvas(NeedUpdateCanvasEvent event) {
-        updateNeuronsGraph();
+        needUpdate = true;
     }
 
     private void updateNeuronsGraph() {
@@ -167,6 +178,21 @@ public class CanvasWindowController implements Initializable {
         for (NeuronGraph selectNeuron : selectNeurons) {
             graphicsContext2D.strokeOval(xOffset + scale * (selectNeuron.getX() - radius),
                     yOffset + scale * (selectNeuron.getY() - radius), scale * radius * 2, scale * radius * 2);
+        }
+
+        MouseEvent pressedMouse = canvasState.getPressedMouse();
+        MouseEvent currentMouse = canvasState.getCurrentMouse();
+
+        if (pressedMouse != null && currentMouse != null) {
+            double x = pressedMouse.getX();
+            double y = pressedMouse.getY();
+            double x1 = currentMouse.getX();
+            double y1 = currentMouse.getY();
+            double minX = Math.min(x, x1);
+            double minY = Math.min(y, y1);
+            double maxX = Math.max(x, x1);
+            double maxY = Math.max(y, y1);
+            graphicsContext2D.strokeRect(minX, minY, maxX - minX, maxY - minY);
         }
     }
 

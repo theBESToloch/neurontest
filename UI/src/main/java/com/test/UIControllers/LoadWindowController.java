@@ -2,10 +2,9 @@ package com.test.UIControllers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.test.common.data.dto.NeuronGraph;
 import com.test.context.ApplicationContext;
-import com.test.events.LoadModelEvent;
-import com.test.events.ShowModelLoadWindowEvent;
+import com.test.event.LoadModelEvent;
+import com.test.event.ShowModelLoadWindowEvent;
 import com.test.persistence.entities.NNPreview;
 import com.test.persistence.services.NNPreviewService;
 import javafx.beans.value.ObservableValue;
@@ -34,7 +33,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.net.URL;
-import java.util.List;
 import java.util.ResourceBundle;
 
 @Slf4j

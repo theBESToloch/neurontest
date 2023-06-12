@@ -1,10 +1,9 @@
-package com.test.handlers;
+package com.test.handler.event;
 
 import com.test.context.ApplicationContext;
-import com.test.context.ButtonClickState;
 import com.test.context.EventDescriptor;
 import com.test.context.EventQueueHandler;
-import com.test.events.ShowModelLoadWindowEvent;
+import com.test.event.ShowModelLoadWindowEvent;
 import com.test.persistence.entities.NNPreview;
 import com.test.persistence.services.NNDescriptionService;
 import javafx.embed.swing.SwingFXUtils;

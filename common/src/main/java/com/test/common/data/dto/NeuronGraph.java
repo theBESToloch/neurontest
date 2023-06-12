@@ -1,10 +1,13 @@
 package com.test.common.data.dto;
 
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+@Getter
 public class NeuronGraph {
     private static final AtomicLong counter = new AtomicLong(0);
     public static final double RADIUS = 10;
@@ -28,35 +31,17 @@ public class NeuronGraph {
         this.inputConnect = new ArrayList<>();
     }
 
-    public String getId() {
-        return id;
-    }
-
     public boolean isOccupied(double x, double y, double multiplyer) {
         double distance = RADIUS * multiplyer;
         return x > (this.x - distance) && x < (this.x + distance) && y > (this.y - distance) && y < (this.y + distance);
     }
 
-    public double getX() {
-        return x;
-    }
     public void setX(double x) {
         this.x = x;
     }
 
-    public double getY() {
-        return y;
-    }
     public void setY(double y) {
         this.y = y;
-    }
-
-    public NeuronTypes getNeuronTypes() {
-        return neuronTypes;
-    }
-
-    public long getNeuron() {
-        return neuron;
     }
 
     public void setNeuron(long neuron) {
@@ -71,10 +56,6 @@ public class NeuronGraph {
         outputConnect.remove(neuronId);
     }
 
-    public List<String> getOutputConnect() {
-        return outputConnect;
-    }
-
     public void addInputNeuronGraph(String neuronId) {
         this.inputConnect.add(neuronId);
     }
@@ -83,7 +64,4 @@ public class NeuronGraph {
         inputConnect.remove(neuronId);
     }
 
-    public List<String> getInputConnect() {
-        return inputConnect;
-    }
 }

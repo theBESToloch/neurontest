@@ -4,6 +4,7 @@ import com.test.NeuronFactory;
 import com.test.common.data.dto.NeuronGraph;
 import com.test.common.data.dto.NeuronTypes;
 import com.test.template.NN;
+import javafx.scene.input.MouseEvent;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -22,14 +23,14 @@ public class ApplicationContext {
 
     private List<NeuronGraph> neuronGraphList;
 
+    private NeuronTypes neuronType;
+    private volatile boolean isTrainButton = true;
+
     public ApplicationContext() {
         neuronFactory = new NeuronFactory(new NN());
         neuronGraphList = new ArrayList<>();
         neuronType = NeuronTypes.HIDDEN;
     }
-
-    private NeuronTypes neuronType;
-    private volatile boolean isTrainButton = true;
 
     @Getter
     @Setter
@@ -39,10 +40,11 @@ public class ApplicationContext {
         private double xOffset = 0;
         private double yOffset = 0;
 
-        private double[] firstSelectNeuronCoordinate = null;
-
         private final Set<NeuronGraph> selectNeurons = new HashSet<>();
 
+        //for select rectangle
+        private MouseEvent pressedMouse = null;
+        private MouseEvent currentMouse = null;
         public void cleanSelectNeurons(){
             selectNeurons.clear();
         }
@@ -60,6 +62,7 @@ public class ApplicationContext {
         }
     }
 
+    @Getter
     public class ManageWindowState {
 
         private static final int count = 20;
@@ -90,14 +93,6 @@ public class ApplicationContext {
 
         public void setTrainButton(boolean trainButton) {
             ApplicationContext.this.isTrainButton = trainButton;
-        }
-
-        public List<double[]> getInputVectors() {
-            return inputVectors;
-        }
-
-        public List<double[]> getOutputVectors() {
-            return outputVectors;
         }
 
         public int getCount() {

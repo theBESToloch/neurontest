@@ -1,9 +1,9 @@
-package com.test.handlers;
+package com.test.handler.event;
 
 import com.test.context.ApplicationContext;
 import com.test.context.EventDescriptor;
 import com.test.context.EventQueueHandler;
-import com.test.events.NeedUpdateCanvasEvent;
+import com.test.event.NeedUpdateCanvasEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.ScrollEvent;
 import lombok.RequiredArgsConstructor;
